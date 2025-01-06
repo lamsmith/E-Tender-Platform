@@ -1,4 +1,5 @@
 ﻿using MarketplaceService.Domain.Entities;
+using MarketplaceService.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace MarketplaceService.Infrastructure.Persistence.Context
