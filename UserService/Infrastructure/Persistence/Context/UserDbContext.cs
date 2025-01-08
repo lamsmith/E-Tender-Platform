@@ -3,9 +3,9 @@ using UserService.Domain.Entities;
 
 namespace UserService.Infrastructure.Persistence.Context
 {
-    public class ApplicationDbContext : DbContext
+    public class UserDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        public UserDbContext(DbContextOptions<UserDbContext> options)
             : base(options)
         {
         }
@@ -19,7 +19,7 @@ namespace UserService.Infrastructure.Persistence.Context
             base.OnModelCreating(modelBuilder);
 
             // Apply entity configurations
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(UserDbContext).Assembly);
         }
     }
 }
