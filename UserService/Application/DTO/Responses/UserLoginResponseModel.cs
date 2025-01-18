@@ -1,4 +1,4 @@
-﻿namespace UserService.DTO.Responses
+﻿namespace UserService.Application.DTO.Responses
 {
     public class UserLoginResponseModel
     {

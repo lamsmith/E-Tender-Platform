@@ -2,8 +2,8 @@
 using System.Text;
 using UserService.Application.Common.Interface.Repositories;
 using UserService.Application.Common.Interface.Services;
+using UserService.Application.DTO.Requests;
 using UserService.Domain.Entities;
-using UserService.DTO.Requests;
 
 namespace UserService.Infrastructure.Services
 {

@@ -1,4 +1,4 @@
-﻿namespace UserService.DTO.Requests
+﻿namespace UserService.Application.DTO.Requests
 {
     public class UserProfileUpdateRequestModel
     {

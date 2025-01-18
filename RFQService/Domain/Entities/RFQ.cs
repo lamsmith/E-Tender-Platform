@@ -11,6 +11,7 @@ namespace RFQService.Domain.Entities
         public string DeliveryTerms { get; set; }
         public string OtherInformation { get; set; }
         public DateTime Deadline { get; set; }
+        public Status Status { get; set; }
         public VisibilityType Visibility { get; set; }
         public Guid CreatedByUserId { get; set; }
         public ICollection<RFQRecipient> Recipients { get; set; } = new List<RFQRecipient>();

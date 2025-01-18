@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace UserService.DTO.Requests
+namespace UserService.Application.DTO.Requests
 {
     public class UserChangePasswordRequestModel
     {

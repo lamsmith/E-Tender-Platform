@@ -1,5 +1,5 @@
-﻿using UserService.DTO.Requests;
-using UserService.DTO.Responses;
+﻿using UserService.Application.DTO.Requests;
+using UserService.Application.DTO.Responses;
 
 namespace UserService.Application.Common.Interface.Services
 {

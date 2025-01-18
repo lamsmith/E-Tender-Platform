@@ -1,5 +1,5 @@
-﻿using UserService.Domain.Entities;
-using UserService.DTO.Requests;
+﻿using UserService.Application.DTO.Requests;
+using UserService.Domain.Entities;
 
 namespace UserService.Application.Common.Interface.Services
 {

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using UserService.Domain.Enums;
 
-namespace UserService.DTO.Requests
+namespace UserService.Application.DTO.Requests
 {
     public class UserRegistrationRequestModel
     {

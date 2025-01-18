@@ -5,10 +5,10 @@ using System.Security.Cryptography;
 using System.Text;
 using UserService.Application.Common.Interface.Repositories;
 using UserService.Application.Common.Interface.Services;
+using UserService.Application.DTO.Requests;
+using UserService.Application.DTO.Responses;
 using UserService.Domain.Entities;
 using UserService.Domain.Enums;
-using UserService.DTO.Requests;
-using UserService.DTO.Responses;
 
 namespace UserService.Infrastructure.Services
 {
