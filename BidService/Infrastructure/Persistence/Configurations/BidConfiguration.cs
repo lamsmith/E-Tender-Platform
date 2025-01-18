@@ -36,7 +36,7 @@ namespace BidService.Infrastructure.Persistence.Configurations
                 .IsRequired();
 
             // Relationship with BidDocuments
-            builder.HasMany(b => b.BidDocuments)
+            builder.HasMany(b => b.ProposalFiles)
                 .WithOne(d => d.Bid)
                 .HasForeignKey(d => d.BidId)
                 .OnDelete(DeleteBehavior.Cascade);

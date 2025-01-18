@@ -14,21 +14,33 @@ namespace RFQService.Infrastructure.Persistence.Configurations
             builder.HasKey(r => r.Id);
 
             // Properties
-            builder.Property(r => r.Title)
+            builder.Property(r => r.ContractTitle)
                 .IsRequired()
                 .HasMaxLength(200);
 
-            builder.Property(r => r.Description)
+            builder.Property(r => r.ScopeOfSupply)
                 .IsRequired()
-                .HasMaxLength(1000);
+                .HasMaxLength(10000);
+
+            builder.Property(r => r.PaymentTerms)
+               .IsRequired()
+               .HasMaxLength(10000);
+
+            builder.Property(r => r.DeliveryTerms)
+               .IsRequired()
+               .HasMaxLength(10000);
+
+            builder.Property(r => r.OtherInformation)
+              .HasMaxLength(10000);
 
             builder.Property(r => r.Deadline)
                 .IsRequired();
 
             builder.Property(r => r.Visibility)
-                .IsRequired();
+                .IsRequired()
+                .HasConversion<string>();
 
-            
+
             builder.Property(r => r.CreatedByUserId)
                 .IsRequired();
 
@@ -36,6 +48,13 @@ namespace RFQService.Infrastructure.Persistence.Configurations
             builder.HasMany(r => r.Documents)
                 .WithOne(d => d.RFQ)
                 .HasForeignKey(d => d.RFQId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+            // Relationship with RFQRecipient
+            builder.HasMany(r => r.Recipients)
+                .WithOne() // RFQRecipient doesn't have a navigation property back to RFQ
+                .HasForeignKey(rr => rr.RFQId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

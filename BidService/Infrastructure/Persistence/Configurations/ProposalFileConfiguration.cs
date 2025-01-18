@@ -4,12 +4,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BidService.Infrastructure.Persistence.Configurations
 {
-    public class BidDocumentConfiguration : IEntityTypeConfiguration<BidDocument>
+    public class ProposalFileConfiguration : IEntityTypeConfiguration<ProposalFile>
     {
-        public void Configure(EntityTypeBuilder<BidDocument> builder)
+        public void Configure(EntityTypeBuilder<ProposalFile> builder)
         {
             // Table name
-            builder.ToTable("BidDocuments");
+            builder.ToTable("ProposalFiles");
 
             // Primary Key
             builder.HasKey(d => d.Id);
@@ -28,7 +28,7 @@ namespace BidService.Infrastructure.Persistence.Configurations
 
             // Relationships
             builder.HasOne(d => d.Bid)
-                .WithMany(b => b.BidDocuments)
+                .WithMany(b => b.ProposalFiles)
                 .HasForeignKey(d => d.BidId)
                 .OnDelete(DeleteBehavior.Cascade);
         }

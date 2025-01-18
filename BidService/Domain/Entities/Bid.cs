@@ -11,6 +11,6 @@ namespace BidService.Domain.Entities
         public Guid RFQId { get; set; }
         public Guid UserId { get; set; }
         public DateTime SubmissionDate { get; set; }
-        public ICollection<BidDocument> BidDocuments { get; set; } = new List<BidDocument>();
+        public ICollection<ProposalFile> ProposalFiles { get; set; } = new List<ProposalFile>();
     }
 }

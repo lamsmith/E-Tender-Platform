@@ -1,4 +1,5 @@
 ﻿using UserService.Domain.Common;
+using UserService.Domain.Enums;
 
 namespace UserService.Domain.Entities
 {
@@ -6,8 +7,8 @@ namespace UserService.Domain.Entities
     {
         public string Email { get; set; }
         public string PasswordHash { get; set; }
-        public Guid RoleId { get; set; }
-        public Role Role { get; set; }
+        public string PasswordSalt { get; set; }
         public Profile Profile { get; set; }
+        public Role Role { get; set; }
     }
 }

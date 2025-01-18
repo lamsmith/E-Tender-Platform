@@ -13,12 +13,9 @@ namespace UserService.Infrastructure.Persistence.Configurations
             builder.HasKey(u => u.Id);
             builder.Property(u => u.Email).IsRequired().HasMaxLength(256);
             builder.Property(u => u.PasswordHash).IsRequired();
-           
 
-            builder.HasOne(u => u.Role)
-                   .WithMany(r => r.Users)
-                   .HasForeignKey(u => u.RoleId)
-                   .OnDelete(DeleteBehavior.Cascade);
+            builder.Property(u => u.Role)
+                   .HasConversion<string>();
 
             builder.HasOne(u => u.Profile)
                    .WithOne(p => p.User)

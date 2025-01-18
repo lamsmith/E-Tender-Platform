@@ -13,8 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Application\Common\Interface\Services\" />
+    <Folder Include="Application\Common\Interface\Repositories\" />
     <Folder Include="WebAPI\Controllers\" />
-    <Folder Include="Application\" />
   </ItemGroup>
 
 </Project>
