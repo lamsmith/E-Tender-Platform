@@ -33,7 +33,7 @@ namespace RFQService.Infrastructure.Persistence.Repositories
             _context.RFQs.Update(rfq);
             await _context.SaveChangesAsync();
             await CacheRFQAsync(rfq);
-            await RemoveCachedRFQAsync(rfq.Id); // Ensure old cache is cleared
+            await RemoveCachedRFQAsync(rfq.Id); 
             return rfq;
         }
 

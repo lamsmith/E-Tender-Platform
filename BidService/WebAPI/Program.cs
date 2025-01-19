@@ -10,9 +10,13 @@ namespace BidService.WebAPI
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddAutoMapper(typeof(Program));
+
 
             builder.Services.AddDbContext<BidDbContext>(options =>
             options.UseNpgsql(builder.Configuration.GetConnectionString("sqlConnection")));
+
+
 
 
             builder.Services.AddControllers();
