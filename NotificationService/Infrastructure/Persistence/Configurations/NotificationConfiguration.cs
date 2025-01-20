@@ -18,7 +18,7 @@ namespace NotificationService.Infrastructure.Persistence.Configurations
             builder.Property(n => n.Message)
                 .IsRequired()
                 .HasMaxLength(1000); 
-            builder.Property(n => n.SentAt)
+            builder.Property(n => n.Timestamp)
                 .IsRequired();
 
             builder.Property(n => n.IsRead)
