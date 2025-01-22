@@ -1,7 +1,5 @@
-using Microsoft.EntityFrameworkCore.Metadata;
-using RabbitMQ.Client;
 
-namespace RFQService.WebAPI
+namespace Backoffice_Services
 {
     public class Program
     {
@@ -10,18 +8,6 @@ namespace RFQService.WebAPI
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
-            builder.Services.AddHttpContextAccessor();
-
-           
-
-
-                builder.Services.AddStackExchangeRedisCache(options =>
-            {
-                options.Configuration = builder.Configuration.GetConnectionString("Redis");
-
-            });
-
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

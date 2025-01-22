@@ -100,7 +100,9 @@ namespace UserService.Infrastructure.Services
             return await _userRepository.GetByIdAsync(userId);
         }
 
-     
+        public async Task<int> GetUserCountAsync() => await _userRepository.GetCountAsync();
+
+
 
         public async Task<int> GetUserRfqCreatedCountAsync(Guid userId)
         {

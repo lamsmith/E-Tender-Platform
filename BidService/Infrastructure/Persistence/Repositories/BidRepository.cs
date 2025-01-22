@@ -93,9 +93,33 @@ namespace BidService.Infrastructure.Persistence.Repositories
             return bids.ToPaginatedList(totalItems, pageRequest.Page, pageRequest.PageSize);
         }
 
-        public async Task<int> CountBidsByUserAsync(Guid userId)
+        public async Task<PaginatedList<Bid>> CountBidsByUserAsync(Guid userId, PageRequest pageRequest)
         {
-            return await _context.Bids.CountAsync(b => b.UserId == userId);
+            var query = _context.Bids
+                .Where(b => b.UserId == userId)
+                .AsNoTracking();
+
+            if (!string.IsNullOrEmpty(pageRequest.SortBy))
+            {
+                query = pageRequest.IsAscending
+                    ? query.OrderBy(b => EF.Property<object>(b, pageRequest.SortBy))
+                    : query.OrderByDescending(b => EF.Property<object>(b, pageRequest.SortBy));
+            }
+
+            if (!string.IsNullOrEmpty(pageRequest.Keyword))
+            {
+                query = query.Where(b => b.ToString().Contains(pageRequest.Keyword));
+            }
+
+            var totalItems = await query.LongCountAsync(); 
+
+            var items = query
+                .Skip((pageRequest.Page - 1) * pageRequest.PageSize)
+                .Take(pageRequest.PageSize);
+
+            var bids = await items.ToListAsync();
+
+            return bids.ToPaginatedList(totalItems, pageRequest.Page, pageRequest.PageSize);
         }
 
         public async Task<(int TotalBids, int SuccessfulBids)> GetBidStatsByUserAsync(Guid userId)
@@ -113,6 +137,15 @@ namespace BidService.Infrastructure.Persistence.Repositories
             if (stats == null) return (0, 0);
             return (stats.TotalBids, stats.SuccessfulBids);
         }
+
+        public async Task<int> CountBidsByStatusAsync(BidStatus status)
+        {
+            return await _context.Bids.CountAsync(b => b.Status == status);
+        }
+
+
+
+
 
         public async Task CacheBidAsync(Bid bid)
         {

@@ -1,5 +1,7 @@
 ﻿using BidService.Domain.Entities;
+using BidService.Domain.Enums;
 using BidService.Domain.Paging;
+using System.Threading.Tasks;
 
 namespace BidService.Application.Common
 {
@@ -10,8 +12,10 @@ namespace BidService.Application.Common
         Task<Bid> GetByIdAsync(Guid id);
         Task<bool> DeleteAsync(Guid id);
         Task<PaginatedList<Bid>> GetBidsByRFQAsync(Guid rfqId, PageRequest pageRequest);
-        Task<int> CountBidsByUserAsync(Guid userId);
+        Task<PaginatedList<Bid>> CountBidsByUserAsync(Guid userId, PageRequest pageRequest);
         Task<(int TotalBids, int SuccessfulBids)> GetBidStatsByUserAsync(Guid userId);
+        Task<int> CountBidsByStatusAsync(BidStatus status);
+
 
         // Caching related methods
         Task CacheBidAsync(Bid bid);

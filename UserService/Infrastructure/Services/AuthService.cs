@@ -76,7 +76,7 @@ namespace UserService.Infrastructure.Services
 
             if (user == null || !VerifyPassword(request.Password, user.PasswordHash, user.PasswordSalt))
             {
-                throw new UnauthorizedAccessException("Invalid username or password.");
+                throw new UnauthorizedAccessException("Invalid Email or password.");
             }
 
             var token = await GenerateTokenAsync(user);

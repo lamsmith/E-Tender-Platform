@@ -15,6 +15,8 @@ namespace RFQService.Application.Common.Interface.Repositories
         Task<int> CountByCreatorAsync(Guid creatorId);
         Task AddDocumentAsync(RFQDocument document);
 
+        Task<int> CountByStatusAsync(Status status);
+       
 
         Task CacheRFQAsync(RFQ rfq);
         Task<RFQ> GetCachedRFQAsync(Guid id);

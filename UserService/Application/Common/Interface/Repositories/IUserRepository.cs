@@ -13,6 +13,10 @@ namespace UserService.Application.Common.Interface.Repositories
         Task DeleteAsync(Guid id);
         Task<User> GetByEmailAsync(string email);
 
+        Task<int> GetCountAsync();
+        
+
+
 
         Task<int> GetBidsSubmittedCountAsync(Guid userId);
         Task<(int TotalBids, int SuccessfulBids)> GetBidSuccessRateAsync(Guid userId);

@@ -113,8 +113,12 @@ namespace UserService.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<int> GetCountAsync()
+        {
+            return await _context.Users.CountAsync();
+        }
 
 
-        
+
     }
 }

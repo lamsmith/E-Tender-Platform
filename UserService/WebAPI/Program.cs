@@ -1,3 +1,4 @@
+using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
@@ -5,11 +6,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
 using System.Text;
+using UserService.Application.Common.Interface.Repositories;
+using UserService.Application.Common.Interface.Services;
 using UserService.Infrastructure.JWT;
 using UserService.Infrastructure.Persistence.Context;
+using UserService.Infrastructure.Repositories;
+using UserService.Infrastructure.Services;
 
-namespace UserService.WebAPI
-{
+
     public class Program
     {
         public static void Main(string[] args)
@@ -21,8 +25,12 @@ namespace UserService.WebAPI
 
             // Add services to the container.
 
+            builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IUserService, UserServices>();
 
 
+            //JWT
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -30,24 +38,44 @@ namespace UserService.WebAPI
             })
             .AddJwtBearer(options =>
     {
-             options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-        };
-             options.MapInboundClaims = false;
-        });
+                     options.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            ValidateIssuer = true,
+                            ValidateAudience = true,
+                            ValidateLifetime = true,
+                            ValidateIssuerSigningKey = true,
+                            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                            ValidAudience = builder.Configuration["Jwt:Audience"],
+                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                        };
+                     options.MapInboundClaims = false;
+                });
 
             builder.Services.AddScoped<IJwtTokenService, JwtTokenGenerator>();
-            builder.Services.AddHttpContextAccessor();
 
 
 
+                //RabbitMQ
+                builder.Services.AddMassTransit(x =>
+                {
+                    // elided...
+
+                    x.UsingRabbitMq((context, cfg) =>
+                    {
+                        cfg.Host("localhost", "/", h => {
+                            h.Username("guest");
+                            h.Password("guest");
+                        });
+
+                        cfg.ConfigureEndpoints(context);
+                    });
+                });
+        //builder.Services.AddHostedService<MassTransitConsoleHostedService>();
+
+        builder.Services.AddHttpContextAccessor();
+
+
+            //REDIS
             builder.Services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = builder.Configuration.GetConnectionString("Redis");
@@ -84,4 +112,4 @@ namespace UserService.WebAPI
             app.Run();
         }
     }
-}
+

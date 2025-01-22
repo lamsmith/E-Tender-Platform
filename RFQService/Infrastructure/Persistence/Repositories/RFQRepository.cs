@@ -109,11 +109,22 @@ namespace RFQService.Infrastructure.Persistence.Repositories
             return await _context.RFQs.CountAsync(r => r.CreatedByUserId == creatorId);
         }
 
+        public async Task<int> CountByStatusAsync(Status status)
+        {
+            return await _context.RFQs.CountAsync(r => r.Status == status);
+        }
+
         public async Task AddDocumentAsync(RFQDocument document)
         {
             await _context.RFQDocuments.AddAsync(document);
             await _context.SaveChangesAsync();
         }
+
+
+
+
+
+
 
         public async Task CacheRFQAsync(RFQ rfq)
         {
