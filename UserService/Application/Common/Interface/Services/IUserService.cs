@@ -12,6 +12,6 @@ namespace UserService.Application.Common.Interface.Services
         Task<decimal> GetUserBidSuccessRateAsync(Guid userId);
         Task<User> GetUserByIdAsync(Guid userId);
         Task<int> GetUserCountAsync();
-
+       
     }
 }

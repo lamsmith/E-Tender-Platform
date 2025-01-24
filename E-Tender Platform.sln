@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RFQService", "RFQService\RF
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dashboard Analytics System", "Dashboard Analytics System\Dashboard Analytics System.csproj", "{7ECBF4DC-D124-4BD1-BFBC-0290B287349F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backoffice Services", "Backoffice Services\Backoffice Services.csproj", "{A901E6B8-C0FF-4175-840F-3987FB666C8E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Backoffice Services", "Backoffice Services\Backoffice Services.csproj", "{A901E6B8-C0FF-4175-840F-3987FB666C8E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedLibrary", "SharedLibrary\SharedLibrary.csproj", "{ECBDF0F8-6A8A-44CE-9407-A1EAA3704916}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{A901E6B8-C0FF-4175-840F-3987FB666C8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A901E6B8-C0FF-4175-840F-3987FB666C8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A901E6B8-C0FF-4175-840F-3987FB666C8E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ECBDF0F8-6A8A-44CE-9407-A1EAA3704916}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ECBDF0F8-6A8A-44CE-9407-A1EAA3704916}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ECBDF0F8-6A8A-44CE-9407-A1EAA3704916}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ECBDF0F8-6A8A-44CE-9407-A1EAA3704916}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

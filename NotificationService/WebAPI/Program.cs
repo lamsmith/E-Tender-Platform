@@ -1,3 +1,8 @@
+using Microsoft.Extensions.DependencyInjection;
+using NotificationService.Infrastructure.Persistence.Context;
+using SharedLibrary.MessageBroker;
+using NotificationService.Infrastructure.Messaging;
+
 namespace NotificationService.WebAPI
 {
     public class Program
@@ -7,6 +12,9 @@ namespace NotificationService.WebAPI
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+
+            builder.Services.AddRabbitMQ();
+            builder.Services.AddHostedService<NotificationConsumer>();
 
             builder.Services.AddHttpContextAccessor();
 

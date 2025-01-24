@@ -1,5 +1,7 @@
 using BidService.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
+using SharedLibrary.MessageBroker;
+using BidService.Infrastructure.Messaging;
 
 namespace BidService.WebAPI
 {
@@ -16,8 +18,9 @@ namespace BidService.WebAPI
             builder.Services.AddDbContext<BidDbContext>(options =>
             options.UseNpgsql(builder.Configuration.GetConnectionString("sqlConnection")));
 
-
-
+            // Add RabbitMQ services
+            builder.Services.AddRabbitMQ();
+            builder.Services.AddScoped<BidMessagePublisher>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using RabbitMQ.Client;
+using SharedLibrary.MessageBroker;
+using RFQService.Infrastructure.Messaging;
 
 namespace RFQService.WebAPI
 {
@@ -13,20 +15,24 @@ namespace RFQService.WebAPI
 
             builder.Services.AddHttpContextAccessor();
 
-           
 
 
-                builder.Services.AddStackExchangeRedisCache(options =>
-            {
-                options.Configuration = builder.Configuration.GetConnectionString("Redis");
 
-            });
+            builder.Services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = builder.Configuration.GetConnectionString("Redis");
+
+        });
 
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            // Add RabbitMQ services
+            builder.Services.AddRabbitMQ();
+            builder.Services.AddScoped<RfqMessagePublisher>();
 
             var app = builder.Build();
 
