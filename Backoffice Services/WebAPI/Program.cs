@@ -1,5 +1,4 @@
-
-namespace Backoffice_Services
+namespace Backoffice_Services.WebAPI
 {
     public class Program
     {

@@ -118,7 +118,10 @@ namespace UserService.Infrastructure.Repositories
             return await _context.Users.CountAsync();
         }
 
-
+        //public async Task<int> CountActiveUsersAsync()
+        //{
+        //    return await _context.Users.CountAsync(u => u.LastLogin >= DateTime.UtcNow.AddDays(-30));
+        //}
 
     }
 }
