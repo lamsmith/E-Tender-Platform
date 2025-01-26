@@ -15,6 +15,10 @@ using UserService.Infrastructure.Services;
 using SharedLibrary.MessageBroker;
 using UserService.Infrastructure.Messaging;
 using UserService.Infrastructure.Cache;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using UserService.Infrastructure.MessageConsumers;
 
 public class Program
 {
@@ -27,7 +31,6 @@ public class Program
 
         // Add services to the container.
 
-        builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IUserService, UserServices>();
 
@@ -39,19 +42,19 @@ public class Program
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         })
         .AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-    };
-    options.MapInboundClaims = false;
-});
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                ValidAudience = builder.Configuration["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            };
+            options.MapInboundClaims = false;
+        });
 
         builder.Services.AddScoped<IJwtTokenService, JwtTokenGenerator>();
 
@@ -74,6 +77,9 @@ public class Program
 
         // Register cache service
         builder.Services.AddScoped<ICacheService, RedisCacheService>();
+
+        // Register Message Consumer
+        builder.Services.AddScoped<UserCreatedConsumer>();
 
         builder.Services.AddControllers();
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

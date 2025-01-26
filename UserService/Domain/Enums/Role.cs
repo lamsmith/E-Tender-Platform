@@ -4,6 +4,7 @@
     {
         MSME,
         Corporate,
-        Admin
+        Admin,
+        Staff,
     }
 }

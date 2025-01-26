@@ -77,7 +77,6 @@ namespace AuthService.Infrastructure.Services
                     {
                         Id = user.Id,
                         Email = user.Email,
-                        Username = user.Username,
                         Role = userDetails.Role
                     }
                 };
@@ -105,7 +104,6 @@ namespace AuthService.Infrastructure.Services
                 {
                     Id = Guid.NewGuid(),
                     Email = request.Email,
-                    Username = request.Username,
                     PasswordHash = HashPassword(request.Password),
                     CreatedAt = DateTime.UtcNow,
                     EmailConfirmed = false,
@@ -117,7 +115,6 @@ namespace AuthService.Infrastructure.Services
                 var createUserMessage = new CreateUserMessage
                 {
                     UserId = authUser.Id,
-                    Username = authUser.Username,
                     Email = authUser.Email,
                     CreatedAt = authUser.CreatedAt
                 };

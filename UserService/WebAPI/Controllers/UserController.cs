@@ -66,58 +66,59 @@ namespace UserService.WebAPI.Controllers
             }
         }
 
-        [HttpPost("change-password")]
-        public async Task<IActionResult> ChangePassword([FromBody] UserChangePasswordRequestModel request)
+        //    [HttpPost("change-password")]
+        //    public async Task<IActionResult> ChangePassword([FromBody] UserChangePasswordRequestModel request)
+        //    {
+        //        try
+        //        {
+        //            var userId = Guid.Parse(User.FindFirst("userId")?.Value);
+        //            await _userService.ChangePasswordAsync(userId, request);
+        //            return Ok(new { message = "Password changed successfully" });
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            return BadRequest(new { message = ex.Message });
+        //        }
+        //    }
+
+        //    [HttpGet("statistics")]
+        //    public async Task<IActionResult> GetUserStatistics()
+        //    {
+        //        try
+        //        {
+        //            var userId = Guid.Parse(User.FindFirst("userId")?.Value);
+        //            var cacheKey = $"user_statistics_{userId}";
+
+        //            // Try to get from cache
+        //            var cachedStats = await _cacheService.GetAsync<UserStatistics>(cacheKey);
+        //            if (cachedStats != null)
+        //            {
+        //                return Ok(cachedStats);
+        //            }
+
+        //            var statistics = new UserStatistics
+        //            {
+        //                RfqCreated = await _userService.GetUserRfqCreatedCountAsync(userId),
+        //                BidsSubmitted = await _userService.GetUserBidsSubmittedCountAsync(userId),
+        //                BidSuccessRate = await _userService.GetUserBidSuccessRateAsync(userId)
+        //            };
+
+        //            await _cacheService.SetAsync(cacheKey, statistics, TimeSpan.FromMinutes(5));
+
+        //            return Ok(statistics);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            return BadRequest(new { message = ex.Message });
+        //        }
+        //    }
+        //}
+
+        public class UserStatistics
         {
-            try
-            {
-                var userId = Guid.Parse(User.FindFirst("userId")?.Value);
-                await _userService.ChangePasswordAsync(userId, request);
-                return Ok(new { message = "Password changed successfully" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            public int RfqCreated { get; set; }
+            public int BidsSubmitted { get; set; }
+            public decimal BidSuccessRate { get; set; }
         }
-
-        [HttpGet("statistics")]
-        public async Task<IActionResult> GetUserStatistics()
-        {
-            try
-            {
-                var userId = Guid.Parse(User.FindFirst("userId")?.Value);
-                var cacheKey = $"user_statistics_{userId}";
-
-                // Try to get from cache
-                var cachedStats = await _cacheService.GetAsync<UserStatistics>(cacheKey);
-                if (cachedStats != null)
-                {
-                    return Ok(cachedStats);
-                }
-
-                var statistics = new UserStatistics
-                {
-                    RfqCreated = await _userService.GetUserRfqCreatedCountAsync(userId),
-                    BidsSubmitted = await _userService.GetUserBidsSubmittedCountAsync(userId),
-                    BidSuccessRate = await _userService.GetUserBidSuccessRateAsync(userId)
-                };
-
-                await _cacheService.SetAsync(cacheKey, statistics, TimeSpan.FromMinutes(5));
-
-                return Ok(statistics);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-    }
-
-    public class UserStatistics
-    {
-        public int RfqCreated { get; set; }
-        public int BidsSubmitted { get; set; }
-        public decimal BidSuccessRate { get; set; }
     }
 }

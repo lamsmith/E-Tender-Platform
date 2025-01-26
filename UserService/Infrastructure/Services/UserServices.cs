@@ -50,34 +50,34 @@ namespace UserService.Infrastructure.Services
             }
         }
 
-        public async Task ChangePasswordAsync(Guid userId, UserChangePasswordRequestModel changePassword)
-        {
-            if (changePassword == null) throw new ArgumentNullException(nameof(changePassword));
+        //public async Task ChangePasswordAsync(Guid userId, UserChangePasswordRequestModel changePassword)
+        //{
+        //    if (changePassword == null) throw new ArgumentNullException(nameof(changePassword));
 
-            var user = await _userRepository.GetByIdAsync(userId);
-            if (user == null)
-            {
-                throw new ArgumentException("User not found.", nameof(userId));
-            }
+        //    var user = await _userRepository.GetByIdAsync(userId);
+        //    if (user == null)
+        //    {
+        //        throw new ArgumentException("User not found.", nameof(userId));
+        //    }
 
-            // Convert stored hash and salt from Base64 string to byte array
-            var storedHash = Convert.FromBase64String(user.PasswordHash);
-            var storedSalt = Convert.FromBase64String(user.PasswordSalt);
+        //    // Convert stored hash and salt from Base64 string to byte array
+        //    var storedHash = Convert.FromBase64String(user.PasswordHash);
+        //    var storedSalt = Convert.FromBase64String(user.PasswordSalt);
 
-            if (!VerifyPassword(changePassword.CurrentPassword, storedHash, storedSalt))
-            {
-                throw new UnauthorizedAccessException("Current password is incorrect.");
-            }
+        //    if (!VerifyPassword(changePassword.CurrentPassword, storedHash, storedSalt))
+        //    {
+        //        throw new UnauthorizedAccessException("Current password is incorrect.");
+        //    }
 
-            var newSalt = GenerateSalt();
-            var newHash = HashPasswordWithSalt(changePassword.NewPassword, newSalt);
+        //    var newSalt = GenerateSalt();
+        //    var newHash = HashPasswordWithSalt(changePassword.NewPassword, newSalt);
 
-            // Store the new hash and salt as Base64 strings
-            user.PasswordHash = Convert.ToBase64String(newHash);
-            user.PasswordSalt = Convert.ToBase64String(newSalt);
+        //    // Store the new hash and salt as Base64 strings
+        //    user.PasswordHash = Convert.ToBase64String(newHash);
+        //    user.PasswordSalt = Convert.ToBase64String(newSalt);
 
-            await _userRepository.UpdateAsync(user);
-        }
+        //    await _userRepository.UpdateAsync(user);
+        //}
 
 
 

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using SharedLibrary.MessageBroker;
 using SharedLibrary.Models.Messages;
 using UserService.Application.Common.Interface.Services;

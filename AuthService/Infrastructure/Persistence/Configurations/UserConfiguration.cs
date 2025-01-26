@@ -14,17 +14,8 @@ namespace AuthService.Infrastructure.Persistence.Configurations
                 .IsRequired()
                 .HasMaxLength(100);
 
-            builder.Property(u => u.Username)
-                .IsRequired()
-                .HasMaxLength(50);
-
             builder.Property(u => u.PasswordHash)
                 .IsRequired();
-
-            builder.Property(u => u.Role)
-                .IsRequired()
-                .HasMaxLength(20)
-                .HasDefaultValue("User");
 
             builder.Property(u => u.CreatedAt)
                 .IsRequired();
@@ -48,9 +39,6 @@ namespace AuthService.Infrastructure.Persistence.Configurations
                 .HasDefaultValue(false);
 
             builder.HasIndex(u => u.Email)
-                .IsUnique();
-
-            builder.HasIndex(u => u.Username)
                 .IsUnique();
         }
     }

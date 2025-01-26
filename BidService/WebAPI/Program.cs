@@ -2,6 +2,8 @@ using BidService.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using SharedLibrary.MessageBroker;
 using BidService.Infrastructure.Messaging;
+using BidService.Infrastructure.Cache;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 
 namespace BidService.WebAPI
 {
@@ -21,6 +23,15 @@ namespace BidService.WebAPI
             // Add RabbitMQ services
             builder.Services.AddRabbitMQ();
             builder.Services.AddScoped<BidMessagePublisher>();
+
+            // Configure Redis
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = builder.Configuration.GetConnectionString("Redis");
+            });
+
+            // Register cache service
+            builder.Services.AddScoped<ICacheService, RedisCacheService>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
