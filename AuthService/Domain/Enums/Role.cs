@@ -1,4 +1,4 @@
-﻿namespace UserService.Domain.Enums
+﻿namespace AuthService.Domain.Enums
 {
     public enum Role
     {

@@ -8,3 +8,4 @@ namespace RFQService.Application.Features.Commands
         public RFQCreationRequestModel RFQData { get; set; }
     }
 }
+    

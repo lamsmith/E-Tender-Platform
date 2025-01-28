@@ -14,8 +14,6 @@ namespace UserService.Infrastructure.Persistence.Configurations
             builder.Property(u => u.Email).IsRequired().HasMaxLength(256);
      
 
-            builder.Property(u => u.Role)
-                   .HasConversion<string>();
 
             builder.HasOne(u => u.Profile)
                    .WithOne(p => p.User)

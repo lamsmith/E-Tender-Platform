@@ -3,14 +3,14 @@ using AuthService.Application.Common.Interface.Services;
 using AuthService.Application.DTO.Requests;
 using AuthService.Application.DTO.Responses;
 using AuthService.Domain.Entities;
-using AuthService.Infrastructure.JWT;
+using AuthService.Domain.Enums;
 using AuthService.Infrastructure.ExternalServices;
-using System.Security.Cryptography;
-using System.Text;
+using AuthService.Infrastructure.JWT;
+using SharedLibrary.Constants;
 using SharedLibrary.MessageBroker;
 using SharedLibrary.Models.Messages;
-using SharedLibrary.Constants;
-using Microsoft.Extensions.Logging;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace AuthService.Infrastructure.Services
 {
@@ -100,11 +100,21 @@ namespace AuthService.Infrastructure.Services
                     throw new Exception("Email already exists");
                 }
 
+
+                if (request.SelectedRole == Role.Admin || request.SelectedRole == Role.Staff)
+                {
+                    _logger.LogWarning("Registration failed -Cannot register as Admin or Staff.");
+                    throw new Exception("Cannot register as Admin or Staff.");
+                }
+
+
+
                 var authUser = new User
                 {
                     Id = Guid.NewGuid(),
                     Email = request.Email,
                     PasswordHash = HashPassword(request.Password),
+                    Role = request.SelectedRole,
                     CreatedAt = DateTime.UtcNow,
                     EmailConfirmed = false,
                     IsActive = true

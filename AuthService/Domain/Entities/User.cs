@@ -1,3 +1,4 @@
+using AuthService.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace AuthService.Domain.Entities
@@ -7,7 +8,8 @@ namespace AuthService.Domain.Entities
         [Key]
         public Guid Id { get; set; }
         public string Email { get; set; }
-        public string PasswordHash { get; set; }    
+        public string PasswordHash { get; set; }
+        public Role Role { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
         public string? RefreshToken { get; set; }

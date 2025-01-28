@@ -1,19 +1,20 @@
+using MediatR;
 using Microsoft.Extensions.Logging;
-using SharedLibrary.MessageBroker;
+using UserService.Infrastructure.MessageBrokers;
 using SharedLibrary.Models.Messages;
-using UserService.Application.Common.Interface.Services;
-using UserService.Domain.Enums;
-
+using UserService.Application.Features.Commands;
 namespace UserService.Infrastructure.MessageConsumers
 {
     public class UserCreatedConsumer : IMessageConsumer<CreateUserMessage>
     {
-        private readonly IUserService _userService;
+        private readonly IMediator _mediator;
         private readonly ILogger<UserCreatedConsumer> _logger;
 
-        public UserCreatedConsumer(IUserService userService, ILogger<UserCreatedConsumer> logger)
+        public UserCreatedConsumer(
+            IMediator mediator,
+            ILogger<UserCreatedConsumer> logger)
         {
-            _userService = userService;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -23,13 +24,14 @@ namespace UserService.Infrastructure.MessageConsumers
             {
                 _logger.LogInformation("Creating user profile for {UserId}", message.UserId);
 
-                await _userService.CreateUserAsync(new CreateUserRequest
+                var command = new CreateUserCommand
                 {
-                    UserId = message.UserId.ToString(),
+                    UserId = message.UserId,
                     Email = message.Email,
-                    Role = Role.User, // Default role from your enum
-                    Profile = new Domain.Entities.Profile() // Initialize with default values
-                });
+                    CreatedAt = message.CreatedAt
+                };
+
+                await _mediator.Send(command);
 
                 _logger.LogInformation("User profile created successfully for {UserId}", message.UserId);
             }

@@ -17,6 +17,10 @@ namespace AuthService.Infrastructure.Persistence.Configurations
             builder.Property(u => u.PasswordHash)
                 .IsRequired();
 
+            builder.Property(u => u.Role)
+                    .IsRequired()
+                   .HasConversion<string>();
+
             builder.Property(u => u.CreatedAt)
                 .IsRequired();
 

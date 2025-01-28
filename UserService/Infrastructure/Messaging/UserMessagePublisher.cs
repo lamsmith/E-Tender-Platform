@@ -19,7 +19,6 @@ namespace UserService.Infrastructure.Messaging
             {
                 UserId = userId,
                 Email = email,
-                Username = username,
                 CreatedAt = DateTime.UtcNow
             };
 

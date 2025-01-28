@@ -1,50 +1,125 @@
+using MediatR;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using NotificationService.Application.Features.Commands;
+using NotificationService.Domain.Entities;
+using SharedLibrary.Constants;
 using SharedLibrary.MessageBroker;
 using SharedLibrary.Models.Messages;
-using SharedLibrary.Constants;
-using NotificationService.Services;
+using System.Text.Json;
 
 namespace NotificationService.Infrastructure.Messaging
 {
     public class NotificationConsumer : BackgroundService
     {
-        private readonly RabbitMQConsumer<UserCreatedMessage> _userConsumer;
-        private readonly RabbitMQConsumer<BidPlacedMessage> _bidConsumer;
-        private readonly RabbitMQConsumer<RfqCreatedMessage> _rfqConsumer;
-        private readonly INotificationService _notificationService;
+        private readonly RabbitMQConnection _connection;
+        private readonly IMediator _mediator;
+        private readonly ILogger<NotificationConsumer> _logger;
 
         public NotificationConsumer(
             RabbitMQConnection connection,
-            INotificationService notificationService)
+            IMediator mediator,
+            ILogger<NotificationConsumer> logger)
         {
-            _userConsumer = new RabbitMQConsumer<UserCreatedMessage>(connection, MessageQueues.UserCreated);
-            _bidConsumer = new RabbitMQConsumer<BidPlacedMessage>(connection, MessageQueues.BidPlaced);
-            _rfqConsumer = new RabbitMQConsumer<RfqCreatedMessage>(connection, MessageQueues.RfqCreated);
-            _notificationService = notificationService;
+            _connection = connection;
+            _mediator = mediator;
+            _logger = logger;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _userConsumer.Consume(HandleUserCreated);
-            _bidConsumer.Consume(HandleBidPlaced);
-            _rfqConsumer.Consume(HandleRfqCreated);
+            try
+            {
+                // Declare the queue using the shared channel
+                _connection.Channel.QueueDeclare(
+                    queue: MessageQueues.Notifications,
+                    durable: true,
+                    exclusive: false,
+                    autoDelete: false,
+                    arguments: null);
 
-            return Task.CompletedTask;
+                var consumer = new RabbitMQConsumer<object>(
+                    _connection,
+                    MessageQueues.Notifications);
+
+                consumer.Consume(async message =>
+                {
+                    try
+                    {
+                        await ProcessMessage(message);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error processing notification message");
+                    }
+                });
+
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    await Task.Delay(1000, stoppingToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in notification consumer");
+            }
         }
 
-        private void HandleUserCreated(UserCreatedMessage message)
+        private async Task ProcessMessage(object message)
         {
-            _notificationService.SendWelcomeNotification(message.Email, message.Username);
-        }
+            var jsonMessage = JsonSerializer.Serialize(message);
 
-        private void HandleBidPlaced(BidPlacedMessage message)
-        {
-            _notificationService.SendBidPlacedNotification(message.UserId, message.RfqId, message.Amount);
-        }
+            if (message is UserCreatedMessage userCreated)
+            {
+                var command = new CreateNotificationCommand
+                {
+                    Notification = new Notification
+                    {
+                        UserId = Guid.Parse(userCreated.UserId),
+                        Message = $"Welcome {userCreated.FirstName}! Your account has been created successfully.",
+                        Type = "UserCreated",
+                        IsRead = false,
+                        Timestamp = DateTime.UtcNow,
+                        Data = jsonMessage
+                    }
+                };
 
-        private void HandleRfqCreated(RfqCreatedMessage message)
-        {
-            _notificationService.SendRfqCreatedNotification(message.CreatedBy, message.Title);
+                await _mediator.Send(command);
+            }
+            else if (message is BidPlacedMessage bidPlaced)
+            {
+                var command = new CreateNotificationCommand
+                {
+                    Notification = new Notification
+                    {
+                        UserId = Guid.Parse(bidPlaced.UserId),
+                        Message = $"Your bid for RFQ {bidPlaced.RfqId} has been placed successfully.",
+                        Type = "BidPlaced",
+                        IsRead = false,
+                        Timestamp = DateTime.UtcNow,
+                        Data = jsonMessage
+                    }
+                };
+
+                await _mediator.Send(command);
+            }
+            else if (message is RfqCreatedMessage rfqCreated)
+            {
+                var command = new CreateNotificationCommand
+                {
+                    Notification = new Notification
+                    {
+                        UserId = Guid.Parse(rfqCreated.CreatedBy),
+                        Message = $"Your RFQ '{rfqCreated.Title}' has been created successfully.",
+                        Type = "RfqCreated",
+                        IsRead = false,
+                        Timestamp = DateTime.UtcNow,
+                        Data = jsonMessage
+                    }
+                };
+
+                await _mediator.Send(command);
+            }
         }
     }
 }
