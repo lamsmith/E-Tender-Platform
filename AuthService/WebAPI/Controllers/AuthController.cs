@@ -2,8 +2,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AuthService.Application.Common.Interface.Services;
 using AuthService.Application.DTO.Requests;
+using AuthService.Application.Features.Commands;
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
+using MediatR;
 
 namespace AuthService.WebAPI.Controllers
 {
@@ -12,13 +14,16 @@ namespace AuthService.WebAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IMediator _mediator;
         private readonly ILogger<AuthController> _logger;
 
         public AuthController(
             IAuthService authService,
+            IMediator mediator,
             ILogger<AuthController> logger)
         {
             _authService = authService;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -107,17 +112,77 @@ namespace AuthService.WebAPI.Controllers
             }
         }
 
+        [HttpPost("staff")]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> CreateStaffUser([FromBody] CreateStaffUserRequest request)
+        {
+            try
+            {
+                var command = new CreateStaffUserCommand
+                {
+                    Email = request.Email,
+                    Role = request.SelectedRole
+                };
+
+                var result = await _mediator.Send(command);
+                return Ok(new { UserId = result.UserId, TempPassword = result.TempPassword });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating staff user");
+                return StatusCode(500, new { message = "Error creating staff user" });
+            }
+        }
+
+        [HttpPost("staff/{userId}/notify")]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> NotifyStaffUser(Guid userId)
+        {
+            try
+            {
+                var command = new SendStaffWelcomeEmailCommand { UserId = userId };
+                await _mediator.Send(command);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending welcome email");
+                return StatusCode(500, new { message = "Error sending welcome email" });
+            }
+        }
+
+        [HttpPost("staff/reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            try
+            {
+                var command = new ResetPasswordCommand
+                {
+                    UserId = request.UserId,
+                    CurrentPassword = request.CurrentPassword,
+                    NewPassword = request.NewPassword
+                };
+
+                await _mediator.Send(command);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting password");
+                return StatusCode(500, new { message = "Error resetting password" });
+            }
+        }
+
         //    [HttpPost("refresh-token")]
         //    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
         //    {
         //        // TODO: Implement refresh token logic
         //        throw new NotImplementedException();
         //    }
-        //}
 
-        //public class RefreshTokenRequest
-        //{
-        //    public string RefreshToken { get; set; }
-        //}
+        //    public class RefreshTokenRequest
+        //    {
+        //        public string RefreshToken { get; set; }
+        //    }
     }
 }

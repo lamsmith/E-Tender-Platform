@@ -5,6 +5,10 @@
         MSME,
         Corporate,
         Admin,
+        SuperAdmin,
         Staff,
+        Reviewer,
+        Support,
+        Auditor
     }
 }

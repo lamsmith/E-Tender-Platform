@@ -17,6 +17,6 @@ namespace RFQService.Domain.Entities
         public ICollection<RFQRecipient> Recipients { get; set; } = new List<RFQRecipient>();
         public ICollection<RFQDocument> Documents { get; set; }
        
-
+         
     }
 }
