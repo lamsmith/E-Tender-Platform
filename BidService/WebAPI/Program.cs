@@ -21,7 +21,7 @@ namespace BidService.WebAPI
             options.UseNpgsql(builder.Configuration.GetConnectionString("sqlConnection")));
 
             // Add RabbitMQ services
-            builder.Services.AddRabbitMQ();
+            builder.Services.AddSharedRabbitMQ();
             builder.Services.AddScoped<BidMessagePublisher>();
 
             // Configure Redis

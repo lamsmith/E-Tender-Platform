@@ -31,24 +31,20 @@ namespace Backoffice_Services.Application.Features.Handlers
             try
             {
                 // Create user in Auth Service
-                var userId = await _authServiceClient.CreateStaffUserAsync(
+                var authResult = await _authServiceClient.CreateStaffUserAsync(
                     request.Email,
-                    request.Password,
                     request.Role.ToString());
 
-                // Create staff in Backoffice Service
+                // Create staff record
                 var staff = new Staff
                 {
-                    UserId = userId,
+                    Email = request.Email,
                     FirstName = request.FirstName,
                     LastName = request.LastName,
-                    Email = request.Email,
                     Role = request.Role,
-                    IsActive = true,
                     Permissions = request.Permissions.Select(p => new StaffPermission
                     {
-                        PermissionType = p,
-                        IsGranted = true
+                        PermissionType = p
                     }).ToList()
                 };
 

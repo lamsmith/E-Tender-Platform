@@ -61,7 +61,7 @@ public class Program
 
 
         //RabbitMQ
-        builder.Services.AddRabbitMQ();
+        builder.Services.AddSharedRabbitMQ();
         builder.Services.AddScoped<UserMessagePublisher>();
         //builder.Services.AddHostedService<MassTransitConsoleHostedService>();
 

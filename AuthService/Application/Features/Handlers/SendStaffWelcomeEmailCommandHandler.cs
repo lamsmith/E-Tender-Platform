@@ -2,6 +2,9 @@ using MediatR;
 using AuthService.Application.Common.Interface.Services;
 using SharedLibrary.MessageBroker;
 using SharedLibrary.Models.Messages;
+using AuthService.Application.Common.Interface.Repositories;
+using AuthService.Application.Features.Commands;
+using SharedLibrary.Constants;
 
 namespace AuthService.Application.Features.Handlers
 {
@@ -31,8 +34,7 @@ namespace AuthService.Application.Features.Handlers
 
                 var message = new StaffWelcomeEmailMessage
                 {
-                    Email = user.Email,
-                    ResetPasswordUrl = $"https://your-domain.com/reset-password?token={user.Id}"
+                    Email = user.Email
                 };
 
                 _messagePublisher.PublishMessage(MessageQueues.Notifications, message);

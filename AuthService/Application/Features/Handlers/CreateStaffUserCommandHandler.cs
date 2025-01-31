@@ -2,6 +2,8 @@ using MediatR;
 using AuthService.Application.Common.Interface.Services;
 using AuthService.Domain.Entities;
 using AuthService.Domain.Enums;
+using AuthService.Application.Common.Interface.Repositories;
+using AuthService.Application.Features.Commands;
 
 namespace AuthService.Application.Features.Handlers
 {

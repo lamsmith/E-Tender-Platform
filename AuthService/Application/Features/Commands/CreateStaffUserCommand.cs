@@ -6,7 +6,7 @@ namespace AuthService.Application.Features.Commands
     public class CreateStaffUserCommand : IRequest<CreateStaffUserResponse>
     {
         public string Email { get; set; }
-        public StaffRole Role { get; set; }
+        public Role Role { get; set; }
     }
 
     public class CreateStaffUserResponse

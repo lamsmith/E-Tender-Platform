@@ -61,7 +61,7 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenGenerator>();
 builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>();
 
 // Register Message Broker
-builder.Services.AddRabbitMQ();
+builder.Services.AddSharedRabbitMQ();
 
 // Register Application Services
 builder.Services.AddScoped<IAuthService, AuthServiceImpl>();

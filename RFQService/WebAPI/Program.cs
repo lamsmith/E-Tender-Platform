@@ -32,7 +32,7 @@ namespace RFQService.WebAPI
             builder.Services.AddSwaggerGen();
 
             // Add RabbitMQ services
-            builder.Services.AddRabbitMQ();
+            builder.Services.AddSharedRabbitMQ();
             builder.Services.AddScoped<RfqMessagePublisher>();
 
             var app = builder.Build();
