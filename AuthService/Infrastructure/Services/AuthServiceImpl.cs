@@ -36,6 +36,83 @@ namespace AuthService.Infrastructure.Services
             _logger = logger;
         }
 
+        public async Task<(Guid UserId, string TempPassword)> CreateStaffUserAsync(string email, Role role)
+        {
+            try
+            {
+                if (await _userRepository.EmailExistsAsync(email))
+                    throw new Exception("Email already exists");
+
+                var tempPassword = GenerateTemporaryPassword();
+
+                var user = new User
+                {
+                    Email = email,
+                    PasswordHash = HashPassword(tempPassword),
+                    Role = role,
+                    IsActive = true,
+                    RequirePasswordChange = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var createdUser = await _userRepository.CreateAsync(user);
+
+                return (createdUser.Id, tempPassword);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating staff user with email: {Email}", email);
+                throw;
+            }
+        }
+
+        public async Task SendStaffWelcomeEmailAsync(Guid userId)
+        {
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                    throw new Exception("User not found");
+
+                var message = new StaffWelcomeEmailMessage
+                {
+                    Email = user.Email
+                };
+
+                _messagePublisher.PublishMessage(MessageQueues.Notifications, message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending welcome email for user: {UserId}", userId);
+                throw;
+            }
+        }
+
+        public async Task<bool> ResetPasswordAsync(Guid userId, string currentPassword, string newPassword)
+        {
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                    throw new Exception("User not found");
+
+                if (!VerifyPassword(currentPassword, user.PasswordHash))
+                    throw new Exception("Current password is incorrect");
+
+                user.PasswordHash = HashPassword(newPassword);
+                user.RequirePasswordChange = false;
+                user.LastPasswordChangeAt = DateTime.UtcNow;
+
+                await _userRepository.UpdateAsync(user);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting password for user: {UserId}", userId);
+                throw;
+            }
+        }
+
         public async Task<UserLoginResponseModel> LoginAsync(UserLoginRequestModel request)
         {
             try
@@ -167,16 +244,22 @@ namespace AuthService.Infrastructure.Services
             }
         }
 
+        private string GenerateTemporaryPassword(int length = 12)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
         private string HashPassword(string password)
         {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(hashedBytes);
+            return BCrypt.Net.BCrypt.HashPassword(password);
         }
 
         private bool VerifyPassword(string password, string hash)
         {
-            return HashPassword(password) == hash;
+            return BCrypt.Net.BCrypt.Verify(password, hash);
         }
     }
 }

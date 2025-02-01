@@ -7,6 +7,6 @@
         ViewReports,
         ManageUsers,
         ApproveSubmissions
-        // Add other permissions as needed
+      
     }
 }

@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AuthService.Application.Common.Interface.Services;
 using AuthService.Application.DTO.Requests;
-using AuthService.Application.Features.Commands;
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
 using MediatR;
@@ -118,14 +117,13 @@ namespace AuthService.WebAPI.Controllers
         {
             try
             {
-                var command = new CreateStaffUserCommand
-                {
-                    Email = request.Email,
-                    Role = request.SelectedRole
-                };
+                var (userId, tempPassword) = await _authService.CreateStaffUserAsync(
+                    request.Email,
+                    request.SelectedRole);
 
-                var result = await _mediator.Send(command);
-                return Ok(new { UserId = result.UserId, TempPassword = result.TempPassword });
+                await _authService.SendStaffWelcomeEmailAsync(userId);
+
+                return Ok(new { UserId = userId, TempPassword = tempPassword });
             }
             catch (Exception ex)
             {
@@ -134,37 +132,18 @@ namespace AuthService.WebAPI.Controllers
             }
         }
 
-        [HttpPost("staff/{userId}/notify")]
-        [Authorize(Roles = "SuperAdmin")]
-        public async Task<IActionResult> NotifyStaffUser(Guid userId)
-        {
-            try
-            {
-                var command = new SendStaffWelcomeEmailCommand { UserId = userId };
-                await _mediator.Send(command);
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error sending welcome email");
-                return StatusCode(500, new { message = "Error sending welcome email" });
-            }
-        }
-
-        [HttpPost("staff/reset-password")]
+        [HttpPost("reset-password")]
+        [Authorize]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
             try
             {
-                var command = new ResetPasswordCommand
-                {
-                    UserId = request.UserId,
-                    CurrentPassword = request.CurrentPassword,
-                    NewPassword = request.NewPassword
-                };
+                await _authService.ResetPasswordAsync(
+                    request.UserId,
+                    request.CurrentPassword,
+                    request.NewPassword);
 
-                await _mediator.Send(command);
-                return Ok();
+                return Ok(new { message = "Password reset successfully" });
             }
             catch (Exception ex)
             {
