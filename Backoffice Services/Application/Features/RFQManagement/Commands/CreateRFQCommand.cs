@@ -1,6 +1,7 @@
-using MediatR;
-using Backoffice_Services.Application.DTO.RFQManagement.Responses;
 using Backoffice_Services.Application.DTO.RFQManagement.Common;
+using Backoffice_Services.Application.DTO.RFQManagement.Responses;
+using MediatR;
+
 
 namespace Backoffice_Services.Application.Features.RFQManagement.Commands
 {

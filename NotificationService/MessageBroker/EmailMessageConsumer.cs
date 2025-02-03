@@ -1,3 +1,4 @@
+using SharedLibrary.MessageBroker.Implementation;
 using SharedLibrary.MessageBroker;
 using SharedLibrary.Models.Messages;
 using NotificationService.Services;
@@ -7,20 +8,22 @@ using SharedLibrary.MessageBroker.Interfaces;
 
 namespace NotificationService.MessageBroker
 {
-    public class EmailMessageConsumer : IMessageConsumer
+    public class EmailMessageConsumer : MessageConsumer
     {
         private readonly IEmailService _emailService;
         private readonly ILogger<EmailMessageConsumer> _logger;
 
         public EmailMessageConsumer(
+            IRabbitMQConnection connection,
             IEmailService emailService,
             ILogger<EmailMessageConsumer> logger)
+            : base(connection, logger)
         {
             _emailService = emailService;
             _logger = logger;
         }
 
-        public async Task ConsumeAsync(string messageType, string message)
+        public override async Task ConsumeAsync(string messageType, string message)
         {
             try
             {

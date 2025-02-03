@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using Backoffice_Services.Application.DTO.RFQManagement.Responses;
 using Backoffice_Services.Application.Features.RFQManagement.Commands;
 using Backoffice_Services.Application.Features.RFQManagement.Handlers;
+using Backoffice_Services.Application.DTO.RFQManagement.Common;
 using RFQService.Domain.Paging;
 
 namespace Backoffice_Services.Infrastructure.ExternalServices
@@ -26,7 +27,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
             try
             {
                 var queryString = BuildQueryString(filter, pageRequest);
-                var response = await _httpClient.GetAsync($"/api/rfq{queryString}");
+                var response = await _httpClient.GetAsync($"api/rfq{queryString}");
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -38,7 +39,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching RFQs with filter: {@Filter}", filter);
+                _logger.LogError(ex, "Error getting RFQs");
                 throw;
             }
         }

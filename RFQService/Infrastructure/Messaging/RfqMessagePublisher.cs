@@ -24,7 +24,7 @@ namespace RFQService.Infrastructure.Messaging
                 Deadline = deadline
             };
 
-            _messagePublisher.PublishMessage(MessageQueues.RFQCreated, message);
+            _messagePublisher.PublishMessage(MessageQueues.RfqCreated, message);
             _messagePublisher.PublishMessage(MessageQueues.Notifications, message);
         }
     }

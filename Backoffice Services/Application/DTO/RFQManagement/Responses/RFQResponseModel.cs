@@ -24,6 +24,6 @@ namespace Backoffice_Services.Application.DTO.RFQManagement.Responses
         public string FileUrl { get; set; }
     }
 
-  
+   
 }
 

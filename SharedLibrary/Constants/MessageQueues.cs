@@ -8,6 +8,5 @@ namespace SharedLibrary.Constants
         public const string OnboardingReminder = "onboarding-reminder";
         public const string EmailNotifications = "email-notifications";
         public const string RFQCreated = "rfq-created";
-        public const string BidPlaced = "bidPlaced";
     }
 }

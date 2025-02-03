@@ -3,6 +3,8 @@ using Backoffice_Services.Application.Features.RFQManagement.Queries;
 using Backoffice_Services.Infrastructure.ExternalServices;
 using MediatR;
 using RFQService.Domain.Paging;
+using Backoffice_Services.Application.DTO.RFQManagement.Common;
+using Microsoft.Extensions.Logging;
 
 namespace Backoffice_Services.Application.Features.RFQManagement.Handlers
 {
@@ -23,12 +25,15 @@ namespace Backoffice_Services.Application.Features.RFQManagement.Handlers
         {
             try
             {
+                var filter = new RFQFilterModel
+                {
+                    Status = request.Status,
+                    FromDate = request.FromDate,
+                    ToDate = request.ToDate
+                };
+
                 var result = await _rfqServiceClient.GetRFQsAsync(filter, request.PageRequest);
 
-                _logger.LogInformation(
-                    "Retrieved {Count} RFQs from total of {Total}",
-                    result.Items.Count,
-                    result.Total);
 
                 return result;
             }
