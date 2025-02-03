@@ -25,9 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Application\DTO\" />
     <Folder Include="Application\Features\UserManagement\" />
-    <Folder Include="Application\Features\RFQManagement\" />
   </ItemGroup>
 
 </Project>
