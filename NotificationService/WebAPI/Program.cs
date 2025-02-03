@@ -1,10 +1,12 @@
-using Microsoft.Extensions.DependencyInjection;
-using NotificationService.Infrastructure.Persistence.Context;
-using SharedLibrary.MessageBroker;
-using NotificationService.Infrastructure.Messaging;
 using Microsoft.EntityFrameworkCore;
 using NotificationService.Infrastructure.Cache;
-using Microsoft.Extensions.Caching.StackExchangeRedis;
+using NotificationService.Infrastructure.Extensions;
+using NotificationService.Infrastructure.Messaging;
+using NotificationService.MessageBroker;
+using NotificationService.Services;
+using SharedLibrary.Constants;
+using SharedLibrary.MessageBroker;
+using SharedLibrary.MessageBroker.Interfaces;
 
 namespace NotificationService.WebAPI
 {
@@ -16,8 +18,8 @@ namespace NotificationService.WebAPI
 
             // Add services to the container.
 
-            builder.Services.AddRabbitMQ();
-            builder.Services.AddHostedService<NotificationConsumer>();
+            builder.Services.AddSharedRabbitMQ();
+
 
             builder.Services.AddHttpContextAccessor();
 
@@ -29,8 +31,25 @@ namespace NotificationService.WebAPI
                 options.Configuration = builder.Configuration.GetConnectionString("Redis");
             });
 
+            // Add services
+            builder.Services.AddScoped<IEmailService, EmailService>();
+            builder.Services.AddScoped<IMessageConsumer, EmailMessageConsumer>();
+
+
             // Register cache service
             builder.Services.AddScoped<ICacheService, RedisCacheService>();
+
+            // Register message consumers and start listening
+            builder.Services.AddScoped<IMessageConsumer, UserVerificationMessageConsumer>();
+            builder.Services.AddScoped<IMessageConsumer, OnboardingReminderMessageConsumer>();
+            builder.Services.AddHostedService<NotificationConsumer>();
+
+            // Configure message broker subscriptions
+            builder.Services.AddMessageSubscriber(options =>
+            {
+                options.AddConsumer<UserVerificationMessageConsumer>(MessageQueues.UserVerification);
+                options.AddConsumer<OnboardingReminderMessageConsumer>(MessageQueues.OnboardingReminder);
+            });
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();

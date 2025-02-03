@@ -3,6 +3,7 @@ using SharedLibrary.Models.Messages;
 using NotificationService.Services;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using SharedLibrary.MessageBroker.Interfaces;
 
 namespace NotificationService.MessageBroker
 {

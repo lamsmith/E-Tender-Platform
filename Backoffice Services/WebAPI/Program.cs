@@ -8,6 +8,7 @@ using Serilog;
 using Backoffice_Services.Infrastructure.Persistence.Context;
 using Microsoft.AspNetCore.Authorization;
 using Backoffice_Services.Domain.Enums;
+using Backoffice_Services.Infrastructure.ExternalServices;
 
 namespace Backoffice_Services.WebAPI
 {
@@ -65,6 +66,9 @@ namespace Backoffice_Services.WebAPI
 
             // Register Message Broker
             builder.Services.AddRabbitMQ();
+
+            // Add HTTP client for AuthService
+            builder.Services.AddHttpClient<IAuthServiceClient, AuthServiceClient>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
