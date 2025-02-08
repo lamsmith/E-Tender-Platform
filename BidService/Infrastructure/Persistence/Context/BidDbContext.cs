@@ -10,7 +10,7 @@ namespace BidService.Infrastructure.Persistence.Context
         { }
 
         public DbSet<Bid> Bids { get; set; }
-        public DbSet<ProposalFile> BidDocuments { get; set; }
+        public DbSet<Domain.Entities.File> BidDocuments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

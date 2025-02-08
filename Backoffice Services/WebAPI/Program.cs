@@ -1,14 +1,19 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Backoffice_Services.Infrastructure.Authorization;
-using SharedLibrary.MessageBroker;
 using Serilog;
-using Backoffice_Services.Infrastructure.Persistence.Context;
-using Microsoft.AspNetCore.Authorization;
-using Backoffice_Services.Domain.Enums;
+using Backoffice_Services.Infrastructure.Authorization;
+using Backoffice_Services.Infrastructure.Cache;
 using Backoffice_Services.Infrastructure.ExternalServices;
+using Backoffice_Services.Infrastructure.MessageConsumers;
+using Backoffice_Services.Infrastructure.Persistence.Context;
+using SharedLibrary.Constants;
+using SharedLibrary.MessageBroker;
+using Backoffice_Services.Domain.Enums;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using NotificationService.Infrastructure.Extensions;
 
 namespace Backoffice_Services.WebAPI
 {
@@ -18,9 +23,10 @@ namespace Backoffice_Services.WebAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Configure Serilog
+            // Configure Serilog for Logging
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(builder.Configuration)
+                .Enrich.FromLogContext()
                 .WriteTo.Console()
                 .WriteTo.File("Logs/backoffice_service_.log",
                     rollingInterval: RollingInterval.Day,
@@ -29,7 +35,7 @@ namespace Backoffice_Services.WebAPI
 
             builder.Host.UseSerilog();
 
-            // Add services to the container.
+            // Add services to the container
             builder.Services.AddDbContext<BackofficeDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -37,7 +43,10 @@ namespace Backoffice_Services.WebAPI
             builder.Services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = builder.Configuration.GetConnectionString("Redis");
+                options.InstanceName = "BackofficeServices_";
             });
+
+            builder.Services.TryAddSingleton<ICacheService, RedisCacheService>();
 
             // Configure Authentication
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -52,7 +61,7 @@ namespace Backoffice_Services.WebAPI
                         ValidIssuer = builder.Configuration["Jwt:Issuer"],
                         ValidAudience = builder.Configuration["Jwt:Audience"],
                         IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]))
+                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!))
                     };
                 });
 
@@ -64,24 +73,33 @@ namespace Backoffice_Services.WebAPI
                     policy.Requirements.Add(new PermissionRequirement(PermissionType.ManageStaff)));
             });
 
-            // Register Message Broker
+            // Register RabbitMQ Message Broker
             builder.Services.AddRabbitMQ();
 
-            // Add HTTP client for AuthService
+            // Register Message Consumers as SINGLETONS
+            builder.Services.AddSingleton<UserProfileCompletedConsumer>();
+
+            // Register Message Broker Subscriptions
+            builder.Services.AddMessageSubscriber(options =>
+            {
+                options.AddConsumer<UserProfileCompletedConsumer>(MessageQueues.UserProfileCompleted);
+            });
+
+            // Add HTTP Clients
             builder.Services.AddHttpClient<IAuthServiceClient, AuthServiceClient>();
+            builder.Services.AddHttpClient<IBidServiceClient, BidServiceClient>();
 
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-
-            // Register MediatR
+            // Register MediatR for CQRS
             builder.Services.AddMediatR(cfg =>
                 cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
+            builder.Services.AddControllers();
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
+
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // Configure the HTTP request pipeline
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -89,10 +107,8 @@ namespace Backoffice_Services.WebAPI
             }
 
             app.UseHttpsRedirection();
-
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.MapControllers();
 
             app.Run();

@@ -91,9 +91,6 @@ namespace Backoffice_Services.WebAPI.Controllers
         }
 
         [HttpGet("{userId}/onboarding-tasks")]
-        [ProducesResponseType(typeof(List<OnboardingTaskDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetOnboardingTasks(Guid userId)
         {
             try
@@ -110,9 +107,6 @@ namespace Backoffice_Services.WebAPI.Controllers
         }
 
         [HttpPost("{userId}/send-onboarding-reminder")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> SendOnboardingReminder(Guid userId)
         {
             try

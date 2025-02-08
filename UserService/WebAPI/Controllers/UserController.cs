@@ -4,6 +4,10 @@ using UserService.Application.Common.Interface.Services;
 using UserService.Application.DTO.Requests;
 using UserService.Domain.Entities;
 using UserService.Infrastructure.Cache;
+using Microsoft.Extensions.Logging;
+using SharedLibrary.Constants;
+using SharedLibrary.Models.Messages;
+using SharedLibrary.MessageBroker;
 
 namespace UserService.WebAPI.Controllers
 {
@@ -14,11 +18,19 @@ namespace UserService.WebAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly ICacheService _cacheService;
+        private readonly IMessagePublisher _messagePublisher;
+        private readonly ILogger<UserController> _logger;
 
-        public UserController(IUserService userService, ICacheService cacheService)
+        public UserController(
+            IUserService userService,
+            ICacheService cacheService,
+            IMessagePublisher messagePublisher,
+            ILogger<UserController> logger)
         {
             _userService = userService;
             _cacheService = cacheService;
+            _messagePublisher = messagePublisher;
+            _logger = logger;
         }
 
         [HttpGet("profile")]
@@ -66,54 +78,34 @@ namespace UserService.WebAPI.Controllers
             }
         }
 
-        //    [HttpPost("change-password")]
-        //    public async Task<IActionResult> ChangePassword([FromBody] UserChangePasswordRequestModel request)
-        //    {
-        //        try
-        //        {
-        //            var userId = Guid.Parse(User.FindFirst("userId")?.Value);
-        //            await _userService.ChangePasswordAsync(userId, request);
-        //            return Ok(new { message = "Password changed successfully" });
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            return BadRequest(new { message = ex.Message });
-        //        }
-        //    }
+        [HttpPost("complete-profile")]
+        public async Task<IActionResult> CompleteProfile([FromBody] CompleteProfileRequest request)
+        {
+            try
+            {
+                var userId = Guid.Parse(User.FindFirst("userId")?.Value);
+                var user = await _userService.UpdateProfileAsync(userId, request);
 
-        //    [HttpGet("statistics")]
-        //    public async Task<IActionResult> GetUserStatistics()
-        //    {
-        //        try
-        //        {
-        //            var userId = Guid.Parse(User.FindFirst("userId")?.Value);
-        //            var cacheKey = $"user_statistics_{userId}";
+                // Publish profile completed message
+                _messagePublisher.PublishMessage(MessageQueues.UserProfileCompleted, new UserProfileCompletedMessage
+                {
+                    UserId = userId,
+                    CompletedAt = DateTime.UtcNow,
+                    IsVerified = false // Will be verified by admin
+                });
 
-        //            // Try to get from cache
-        //            var cachedStats = await _cacheService.GetAsync<UserStatistics>(cacheKey);
-        //            if (cachedStats != null)
-        //            {
-        //                return Ok(cachedStats);
-        //            }
+                // Invalidate cache
+                await _cacheService.RemoveAsync($"user_profile_{userId}");
 
-        //            var statistics = new UserStatistics
-        //            {
-        //                RfqCreated = await _userService.GetUserRfqCreatedCountAsync(userId),
-        //                BidsSubmitted = await _userService.GetUserBidsSubmittedCountAsync(userId),
-        //                BidSuccessRate = await _userService.GetUserBidSuccessRateAsync(userId)
-        //            };
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error completing profile" });
+            }
+        }
 
-        //            await _cacheService.SetAsync(cacheKey, statistics, TimeSpan.FromMinutes(5));
-
-        //            return Ok(statistics);
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            return BadRequest(new { message = ex.Message });
-        //        }
-        //    }
-        //}
-
+       
         public class UserStatistics
         {
             public int RfqCreated { get; set; }

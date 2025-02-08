@@ -13,7 +13,7 @@ namespace UserService.Infrastructure.Messaging
             _messagePublisher = messagePublisher;
         }
 
-        public void PublishUserCreated(string userId, string email, string username)
+        public void PublishUserCreated(Guid userId, string email, string username)
         {
             var message = new UserCreatedMessage
             {

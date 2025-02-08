@@ -27,26 +27,22 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
         {
             try
             {
-                var result = await _authServiceClient.UpdateUserVerificationStatusAsync(
-                    request.UserId,
-                    true,
-                    request.Notes);
+                var userDetails = await _authServiceClient.GetUserDetailsAsync(request.UserId);
+                var result = await _authServiceClient.UpdateUserVerificationStatusAsync(request.UserId, true, request.Notes);
 
                 if (result)
                 {
-                    var userDetails = await _authServiceClient.GetUserDetailsAsync(request.UserId);
-
-                    // Publish verification approved message
-                    var message = new UserVerificationMessage
+                    // Publish verification status message
+                    _messagePublisher.PublishMessage(MessageQueues.UserVerification, new UserVerificationStatusChangedMessage
                     {
                         UserId = request.UserId,
                         Email = userDetails.Email,
                         Status = "Approved",
-                        Notes = request.Notes,
+                        Reason = request.Notes,
                         VerifiedAt = DateTime.UtcNow
-                    };
+                    });
 
-                    _messagePublisher.PublishMessage(MessageQueues.Notifications, message);
+                    _logger.LogInformation("User {UserId} approved successfully", request.UserId);
                 }
 
                 return result;

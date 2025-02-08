@@ -8,7 +8,7 @@ namespace BidService.Application.Extensions
 {
     public static class MappingExtensions
     {
-        // Mapping for paginated lists, similar to your example
+        // Mapping for paginated lists
         public static PaginatedList<T> ToPaginated<T, TB>(this PaginatedList<TB> list, IEnumerable<T> items)
             where T : notnull where TB : notnull
         {
@@ -29,21 +29,21 @@ namespace BidService.Application.Extensions
                 Id = bid.Id,
                 RFQId = bid.RFQId,
                 UserId = bid.UserId,
-                BidAmount = bid.Amount,
+                CostOfProduct = bid.CostOfProduct,
+                CostOfShipping = bid.CostOfShipping,
+                Discount = bid.Discount,
+                Proposal = bid.Proposal,
                 BidStatus = bid.Status,
-                ProposalFiles = bid.ProposalFiles.Select(d => new ProposalFileResponseModel
-                {
-                    FileName = d.FileName,
-                    FileType = d.FileType,
-                    FileUrl = d.FileUrl
-                }).ToList()
+                CompanyProfile = bid.CompanyProfile?.ToFileResponse(),
+                ProjectPlan = bid.ProjectPlan?.ToFileResponse(),
+                ProposalFiles = bid.ProposalFile?.ToFileResponse()
             };
         }
 
-        // Mapping for BidDocument if needed separately
-        public static ProposalFileResponseModel ToBidDocumentResponse(this ProposalFile document)
+        // Mapping from Domain.Entities.File to FileResponse
+        public static FileResponse ToFileResponse(this Domain.Entities.File document)
         {
-            return new ProposalFileResponseModel
+            return new FileResponse
             {
                 FileName = document.FileName,
                 FileType = document.FileType,
@@ -51,21 +51,33 @@ namespace BidService.Application.Extensions
             };
         }
 
+        // **NEW: Mapping from DTO.Requests.File to Domain.Entities.File**
+        public static Domain.Entities.File ToFile(this DTO.Requests.File file)
+        {
+            return new Domain.Entities.File
+            {
+                FileName = file.FileName,
+                FileType = file.FileType,
+                FileUrl = file.FileUrl
+            };
+        }
+
+        // Mapping from BidCreationRequestModel to Bid
         public static Bid ToBid(this BidCreationRequestModel request)
         {
             return new Bid
             {
                 RFQId = request.RFQId,
                 UserId = request.UserId,
-                Amount = request.BidAmount, // Changed from BidAmount to Amount to match entity
-                Status = BidStatus.Pending, // Changed from BidStatus to Status to match entity
-                SubmissionDate = DateTime.UtcNow, // Changed from CreatedAt to SubmissionDate
-                ProposalFiles = request.Documents?.Select(doc => new ProposalFile
-                {
-                    FileName = doc.Name,
-                    FileType = doc.ContentType, 
-                    FileUrl = doc.FileUrl
-                }).ToList() ?? new List<ProposalFile>() 
+                Proposal = request.Proposal,
+                CostOfProduct = request.CostOfProduct,
+                CostOfShipping = request.CostOfShipping,
+                Discount = request.Discount,
+                Status = BidStatus.Pending,
+                SubmissionDate = DateTime.UtcNow,
+                CompanyProfile = request.CompanyProfile?.ToFile(),
+                ProjectPlan = request.ProjectPlan?.ToFile(),
+                ProposalFile = request.ProposalFiles?.ToFile()
             };
         }
     }

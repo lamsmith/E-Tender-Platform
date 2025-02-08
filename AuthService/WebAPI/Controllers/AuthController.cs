@@ -5,6 +5,7 @@ using AuthService.Application.DTO.Requests;
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
 using MediatR;
+using AuthService.Domain.Enums;
 
 namespace AuthService.WebAPI.Controllers
 {
@@ -26,23 +27,36 @@ namespace AuthService.WebAPI.Controllers
             _logger = logger;
         }
 
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserRegistrationRequestModel request)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new { message = "Invalid request data" });
-            }
 
+        [HttpPost("register/corporate")]
+        public async Task<IActionResult> RegisterCorporateUser([FromBody] UserRegistrationRequestModel request)
+        {
             try
             {
-                await _authService.RegisterAsync(request);
-                return Ok(new { message = "Registration successful" });
+                await _authService.RegisterCorporateUserAsync(request);
+
+                return Ok(new { message = "Corporate user registered successfully." });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Registration failed");
-                return BadRequest(new { message = ex.Message });
+                _logger.LogError(ex, "Error registering corporate user");
+                return StatusCode(500, new { message = "Error registering corporate user" });
+            }
+        }
+
+        [HttpPost("register/corporate")]
+        public async Task<IActionResult> RegisterMSMEUser([FromBody] UserRegistrationRequestModel request)
+        {
+            try
+            {
+                await _authService.RegisterMSMEUserAsync(request);
+
+                return Ok(new { message = "MSME user registered successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error registering MSME user");
+                return StatusCode(500, new { message = "Error registering MSME user" });
             }
         }
 

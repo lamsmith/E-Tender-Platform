@@ -1,6 +1,7 @@
 ﻿using BidService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using File = BidService.Domain.Entities.File;
 
 namespace BidService.Infrastructure.Persistence.Configurations
 {
@@ -18,7 +19,15 @@ namespace BidService.Infrastructure.Persistence.Configurations
                 .IsRequired()
                 .HasMaxLength(1000);
 
-            builder.Property(b => b.Amount)
+            builder.Property(b => b.CostOfProduct)
+                .HasColumnType("decimal(18,2)")
+                .IsRequired();
+
+            builder.Property(b => b.CostOfShipping)
+                .HasColumnType("decimal(18,2)")
+                .IsRequired();
+
+            builder.Property(b => b.Discount)
                 .HasColumnType("decimal(18,2)")
                 .IsRequired();
 
@@ -28,18 +37,28 @@ namespace BidService.Infrastructure.Persistence.Configurations
             builder.Property(b => b.SubmissionDate)
                 .IsRequired();
 
-            // Relationships
+            // Required Foreign Keys
             builder.Property(b => b.RFQId)
-               .IsRequired(); // No navigation to RFQ since it's in another service
+                .IsRequired();
 
             builder.Property(b => b.UserId)
                 .IsRequired();
 
-            // Relationship with BidDocuments
-            builder.HasMany(b => b.ProposalFiles)
-                .WithOne(d => d.Bid)
-                .HasForeignKey(d => d.BidId)
-                .OnDelete(DeleteBehavior.Cascade);
+            // File relationships
+            builder.HasOne(b => b.CompanyProfile)
+                .WithOne()
+                .HasForeignKey<File>("BidId")
+                .IsRequired(false);
+
+            builder.HasOne(b => b.ProjectPlan)
+                .WithOne()
+                .HasForeignKey<File>("BidId")
+                .IsRequired(false);
+
+            builder.HasOne(b => b.ProposalFile)
+                .WithOne()
+                .HasForeignKey<File>("BidId")
+                .IsRequired(false);
         }
     }
 }

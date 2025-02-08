@@ -6,7 +6,9 @@ namespace AuthService.Application.Common.Interface.Services
 {
     public interface IAuthService
     {
-        Task RegisterAsync(UserRegistrationRequestModel request);
+        //Task RegisterAsync(UserRegistrationRequestModel request);
+        Task RegisterCorporateUserAsync(UserRegistrationRequestModel request);
+        Task RegisterMSMEUserAsync(UserRegistrationRequestModel request);
         Task<UserLoginResponseModel> LoginAsync(UserLoginRequestModel request);
         Task LogoutAsync(Guid userId);
         Task<(Guid UserId, string TempPassword)> CreateStaffUserAsync(string email, Role role);

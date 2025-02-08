@@ -80,16 +80,7 @@ namespace UserService.Infrastructure.Repositories
             };
         }
 
-        public Task<int> GetBidsSubmittedCountAsync(Guid userId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<(int TotalBids, int SuccessfulBids)> GetBidSuccessRateAsync(Guid userId)
-        {
-            throw new NotImplementedException();
-        }
-
+       
         public async Task<User> GetByEmailAsync(string email)
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
@@ -100,11 +91,7 @@ namespace UserService.Infrastructure.Repositories
             return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        public Task<int> GetRfqCreatedCountAsync(Guid userId)
-        {
-            throw new NotImplementedException();
-        }
-
+       
         public bool IsExitByEmail(string email) => _context.Users.Any(s => s.Email == email);
 
         public async Task UpdateAsync(User user)

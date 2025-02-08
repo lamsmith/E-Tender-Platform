@@ -58,7 +58,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
                 _logger.LogError(ex, "Error fetching pending verifications");
                 throw;
             }
-        }
+        } 
 
         public async Task<bool> UpdateUserVerificationStatusAsync(Guid userId, bool isApproved, string reason = null)
         {

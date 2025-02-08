@@ -36,6 +36,111 @@ namespace AuthService.Infrastructure.Services
             _logger = logger;
         }
 
+        public async Task  RegisterCorporateUserAsync(UserRegistrationRequestModel request)
+        {
+            try
+            {
+                _logger.LogInformation("Registration attempt for email: {Email}", request.Email);
+
+                if (await _userRepository.EmailExistsAsync(request.Email))
+                {
+                    _logger.LogWarning("Registration failed - Email already exists: {Email}", request.Email);
+                    throw new Exception("Email already exists");
+                }
+
+
+                if (request.Role == Role.Admin || request.Role == Role.Staff)
+                {
+                    _logger.LogWarning("Registration failed -Cannot register as Admin or Staff.");
+                    throw new Exception("Cannot register as Admin or Staff.");
+                }
+
+
+
+                var authUser = new User
+                {
+                    Id = Guid.NewGuid(),
+                    Email = request.Email,
+                    PasswordHash = HashPassword(request.Password),
+                    Role = Role.Corporate,
+                    CreatedAt = DateTime.UtcNow,
+                    EmailConfirmed = false,
+                    IsActive = true,
+                    Status = AccountStatus.Pending
+                };
+
+                await _userRepository.CreateAsync(authUser);
+
+                var createUserMessage = new CreateUserMessage
+                {
+                    UserId = authUser.Id,
+                    Email = authUser.Email,
+                    CreatedAt = authUser.CreatedAt
+                };
+
+                _messagePublisher.PublishMessage(MessageQueues.UserCreated, createUserMessage);
+
+                _logger.LogInformation("User successfully registered: {Email}", request.Email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during registration process for email: {Email}", request.Email);
+                throw;
+            }
+        }
+
+        public async Task RegisterMSMEUserAsync(UserRegistrationRequestModel request)
+        {
+            try
+            {
+                _logger.LogInformation("Registration attempt for email: {Email}", request.Email);
+
+                if (await _userRepository.EmailExistsAsync(request.Email))
+                {
+                    _logger.LogWarning("Registration failed - Email already exists: {Email}", request.Email);
+                    throw new Exception("Email already exists");
+                }
+
+
+                if (request.Role == Role.Admin || request.Role == Role.Staff)
+                {
+                    _logger.LogWarning("Registration failed -Cannot register as Admin or Staff.");
+                    throw new Exception("Cannot register as Admin or Staff.");
+                }
+
+
+
+                var authUser = new User
+                {
+                    Id = Guid.NewGuid(),
+                    Email = request.Email,
+                    PasswordHash = HashPassword(request.Password),
+                    Role = Role.MSME,
+                    CreatedAt = DateTime.UtcNow,
+                    EmailConfirmed = false,
+                    IsActive = true,
+                    Status = AccountStatus.Pending
+                };
+
+                await _userRepository.CreateAsync(authUser);
+
+                var createUserMessage = new CreateUserMessage
+                {
+                    UserId = authUser.Id,
+                    Email = authUser.Email,
+                    CreatedAt = authUser.CreatedAt
+                };
+
+                _messagePublisher.PublishMessage(MessageQueues.UserCreated, createUserMessage);
+
+                _logger.LogInformation("User successfully registered: {Email}", request.Email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during registration process for email: {Email}", request.Email);
+                throw;
+            }
+        }
         public async Task<(Guid UserId, string TempPassword)> CreateStaffUserAsync(string email, Role role)
         {
             try
@@ -154,7 +259,8 @@ namespace AuthService.Infrastructure.Services
                     {
                         Id = user.Id,
                         Email = user.Email,
-                        Role = userDetails.Role
+                        Role = userDetails.Role,
+                        AccountStatus = user.Status
                     }
                 };
             }
@@ -165,57 +271,6 @@ namespace AuthService.Infrastructure.Services
             }
         }
 
-        public async Task RegisterAsync(UserRegistrationRequestModel request)
-        {
-            try
-            {
-                _logger.LogInformation("Registration attempt for email: {Email}", request.Email);
-
-                if (await _userRepository.EmailExistsAsync(request.Email))
-                {
-                    _logger.LogWarning("Registration failed - Email already exists: {Email}", request.Email);
-                    throw new Exception("Email already exists");
-                }
-
-
-                if (request.SelectedRole == Role.Admin || request.SelectedRole == Role.Staff)
-                {
-                    _logger.LogWarning("Registration failed -Cannot register as Admin or Staff.");
-                    throw new Exception("Cannot register as Admin or Staff.");
-                }
-
-
-
-                var authUser = new User
-                {
-                    Id = Guid.NewGuid(),
-                    Email = request.Email,
-                    PasswordHash = HashPassword(request.Password),
-                    Role = request.SelectedRole,
-                    CreatedAt = DateTime.UtcNow,
-                    EmailConfirmed = false,
-                    IsActive = true
-                };
-
-                await _userRepository.CreateAsync(authUser);
-
-                var createUserMessage = new CreateUserMessage
-                {
-                    UserId = authUser.Id,
-                    Email = authUser.Email,
-                    CreatedAt = authUser.CreatedAt
-                };
-
-                _messagePublisher.PublishMessage(MessageQueues.UserCreated, createUserMessage);
-
-                _logger.LogInformation("User successfully registered: {Email}", request.Email);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during registration process for email: {Email}", request.Email);
-                throw;
-            }
-        }
 
         public async Task LogoutAsync(Guid userId)
         {

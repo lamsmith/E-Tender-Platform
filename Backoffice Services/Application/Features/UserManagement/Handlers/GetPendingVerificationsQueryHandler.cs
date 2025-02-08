@@ -29,13 +29,45 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
             try
             {
                 var pendingUsers = await _authServiceClient.GetPendingVerificationsAsync();
-                return pendingUsers.Select(u => new UserVerificationDto
+
+                var verificationDtos = new List<UserVerificationDto>();
+
+                foreach (var user in pendingUsers)
                 {
-                    UserId = u.Id,
-                    Email = u.Email,
-                    Role = u.Role,
-                    CreatedAt = u.CreatedAt
-                }).ToList();
+                    var userDetails = await _authServiceClient.GetUserDetailsAsync(user.Id);
+                    verificationDtos.Add(new UserVerificationDto
+                    {
+                        UserId = user.Id,
+                        Email = user.Email,
+                        Role = user.Role,
+                        FirstName = userDetails.FirstName,
+                        LastName = userDetails.LastName,
+                        CompanyName = userDetails.CompanyName,
+                        PhoneNumber = userDetails.PhoneNumber,
+                        Address = userDetails.Address,
+                        Industry = userDetails.Industry,
+                        CreatedAt = user.CreatedAt,
+                        ProfileCompletedAt = userDetails.ProfileCompletedAt
+                    });
+                }
+
+                // Apply filters if provided
+                if (!string.IsNullOrEmpty(request.Role))
+                {
+                    verificationDtos = verificationDtos.Where(u => u.Role.Equals(request.Role, StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+
+                if (request.FromDate.HasValue)
+                {
+                    verificationDtos = verificationDtos.Where(u => u.ProfileCompletedAt >= request.FromDate.Value).ToList();
+                }
+
+                if (request.ToDate.HasValue)
+                {
+                    verificationDtos = verificationDtos.Where(u => u.ProfileCompletedAt <= request.ToDate.Value).ToList();
+                }
+
+                return verificationDtos;
             }
             catch (Exception ex)
             {

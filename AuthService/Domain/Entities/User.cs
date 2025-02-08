@@ -18,5 +18,6 @@ namespace AuthService.Domain.Entities
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiryTime { get; set; }
         public bool EmailConfirmed { get; set; } = false;
+        public AccountStatus Status { get; set; } = AccountStatus.Pending;
     }
 }

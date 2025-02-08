@@ -2,7 +2,7 @@
 
 namespace BidService.Domain.Entities
 {
-    public class ProposalFile : BaseEntity
+    public class File : BaseEntity
     {
         public Guid BidId { get; set; }
         public Bid Bid { get; set; }

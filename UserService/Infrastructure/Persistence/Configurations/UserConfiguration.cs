@@ -12,12 +12,13 @@ namespace UserService.Infrastructure.Persistence.Configurations
 
             builder.HasKey(u => u.Id);
             builder.Property(u => u.Email).IsRequired().HasMaxLength(256);
-     
+
 
 
             builder.HasOne(u => u.Profile)
                    .WithOne(p => p.User)
-                   .HasForeignKey<Profile>(p => p.UserId);
+                   .HasForeignKey<Profile>(p => p.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

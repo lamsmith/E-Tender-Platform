@@ -1,3 +1,5 @@
+using AuthService.Domain.Enums;
+
 namespace AuthService.Application.DTO.Responses
 {
     public class UserLoginResponseModel
@@ -13,5 +15,6 @@ namespace AuthService.Application.DTO.Responses
         public Guid Id { get; set; }
         public string Email { get; set; }
         public string Role { get; set; }
+        public AccountStatus AccountStatus { get; set; }
     }
 }

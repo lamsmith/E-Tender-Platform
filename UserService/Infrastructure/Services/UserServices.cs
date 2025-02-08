@@ -50,50 +50,58 @@ namespace UserService.Infrastructure.Services
             }
         }
 
-        //public async Task ChangePasswordAsync(Guid userId, UserChangePasswordRequestModel changePassword)
-        //{
-        //    if (changePassword == null) throw new ArgumentNullException(nameof(changePassword));
-
-        //    var user = await _userRepository.GetByIdAsync(userId);
-        //    if (user == null)
-        //    {
-        //        throw new ArgumentException("User not found.", nameof(userId));
-        //    }
-
-        //    // Convert stored hash and salt from Base64 string to byte array
-        //    var storedHash = Convert.FromBase64String(user.PasswordHash);
-        //    var storedSalt = Convert.FromBase64String(user.PasswordSalt);
-
-        //    if (!VerifyPassword(changePassword.CurrentPassword, storedHash, storedSalt))
-        //    {
-        //        throw new UnauthorizedAccessException("Current password is incorrect.");
-        //    }
-
-        //    var newSalt = GenerateSalt();
-        //    var newHash = HashPasswordWithSalt(changePassword.NewPassword, newSalt);
-
-        //    // Store the new hash and salt as Base64 strings
-        //    user.PasswordHash = Convert.ToBase64String(newHash);
-        //    user.PasswordSalt = Convert.ToBase64String(newSalt);
-
-        //    await _userRepository.UpdateAsync(user);
-        //}
-
-
-
-        public async Task<int> GetUserBidsSubmittedCountAsync(Guid userId)
+        public async Task<User> UpdateProfileAsync(Guid userId, CompleteProfileRequest request)
         {
-            // Assuming there's a method in the repository to fetch this count
-            return await _userRepository.GetBidsSubmittedCountAsync(userId);
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                throw new KeyNotFoundException($"User not found with ID: {userId}");
+            }
+
+            // Update profile information
+            user.Profile = new Profile
+            {
+                UserId = userId,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                CompanyName = request.CompanyName,
+                PhoneNumber = request.PhoneNumber,
+                Address = request.Address,
+                Industry = request.Industry
+            };
+
+            await _userRepository.UpdateAsync(user);
+
+            return user;
         }
 
-        public async Task<decimal> GetUserBidSuccessRateAsync(Guid userId)
+        public async Task<User> CompleteProfileAsync(Guid userId, CompleteProfileRequest request)
         {
-            // Calculation for bid success rate; assuming there's a method to get this data
-            var bidStats = await _userRepository.GetBidSuccessRateAsync(userId);
-            if (bidStats.TotalBids == 0) return 0;
-            return (decimal)bidStats.SuccessfulBids / bidStats.TotalBids * 100;
+            var user = await GetUserByIdAsync(userId);
+            if (user.Profile != null)
+            {
+                throw new InvalidOperationException("Profile already completed");
+            }
+
+            // Create new profile for initial setup
+            user.Profile = new Profile
+            {
+                UserId = userId,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                CompanyName = request.CompanyName,
+                PhoneNumber = request.PhoneNumber,
+                Address = request.Address,
+                Industry = request.Industry,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _userRepository.UpdateAsync(user);
+           
+
+            return user;
         }
+
 
         public async Task<User> GetUserByIdAsync(Guid userId)
         {
@@ -101,14 +109,6 @@ namespace UserService.Infrastructure.Services
         }
 
         public async Task<int> GetUserCountAsync() => await _userRepository.GetCountAsync();
-
-
-
-        public async Task<int> GetUserRfqCreatedCountAsync(Guid userId)
-        {
-            // Counting RFQs created by a user
-            return await _userRepository.GetRfqCreatedCountAsync(userId);
-        }
 
         public async Task<User> UpdateProfileAsync(Guid userId, UserProfileUpdateRequestModel profileUpdate)
         {
