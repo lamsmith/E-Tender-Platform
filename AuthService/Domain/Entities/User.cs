@@ -1,5 +1,6 @@
 using AuthService.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
+using SharedLibrary.Enums;
 
 namespace AuthService.Domain.Entities
 {
@@ -19,5 +20,6 @@ namespace AuthService.Domain.Entities
         public DateTime? RefreshTokenExpiryTime { get; set; }
         public bool EmailConfirmed { get; set; } = false;
         public AccountStatus Status { get; set; } = AccountStatus.Pending;
+        public DateTime? UpdatedAt { get; set; }
     }
 }

@@ -21,10 +21,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\NotificationService\NotificationService.csproj" />
     <ProjectReference Include="..\SharedLibrary\SharedLibrary.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Application\DTO\BidManagement\" />
+    <Folder Include="Application\Features\BidManagement\" />
     <Folder Include="Application\Features\UserManagement\" />
   </ItemGroup>
 

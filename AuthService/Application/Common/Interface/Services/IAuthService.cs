@@ -1,6 +1,7 @@
 using AuthService.Application.DTO.Requests;
 using AuthService.Application.DTO.Responses;
 using AuthService.Domain.Enums;
+using SharedLibrary.Enums;
 
 namespace AuthService.Application.Common.Interface.Services
 {
@@ -14,5 +15,6 @@ namespace AuthService.Application.Common.Interface.Services
         Task<(Guid UserId, string TempPassword)> CreateStaffUserAsync(string email, Role role);
         Task SendStaffWelcomeEmailAsync(Guid userId);
         Task<bool> ResetPasswordAsync(Guid userId, string currentPassword, string newPassword);
+        Task<bool> UpdateAccountStatusAsync(Guid userId, AccountStatus newStatus, string? reason);
     }
 }

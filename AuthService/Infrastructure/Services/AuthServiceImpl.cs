@@ -11,6 +11,9 @@ using SharedLibrary.MessageBroker;
 using SharedLibrary.Models.Messages;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Logging;
+using System.Security.Claims;
+using SharedLibrary.Enums;
 
 namespace AuthService.Infrastructure.Services
 {
@@ -36,7 +39,7 @@ namespace AuthService.Infrastructure.Services
             _logger = logger;
         }
 
-        public async Task  RegisterCorporateUserAsync(UserRegistrationRequestModel request)
+        public async Task RegisterCorporateUserAsync(UserRegistrationRequestModel request)
         {
             try
             {
@@ -315,6 +318,43 @@ namespace AuthService.Infrastructure.Services
         private bool VerifyPassword(string password, string hash)
         {
             return BCrypt.Net.BCrypt.Verify(password, hash);
+        }
+
+        public async Task<bool> UpdateAccountStatusAsync(Guid userId, AccountStatus newStatus, string? reason)
+        {
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                    return false;
+
+                user.Status = newStatus;
+                user.UpdatedAt = DateTime.UtcNow;
+
+                await _userRepository.UpdateAsync(user);
+
+                // Publish status change event
+                _messagePublisher.PublishMessage(MessageQueues.UserStatusChanged, new UserStatusChangedMessage
+                {
+                    UserId = userId,
+                    NewStatus = newStatus,
+                    Reason = reason,
+                    ChangedAt = DateTime.UtcNow
+                });
+
+                _logger.LogInformation(
+                    "Account status updated for user {UserId} to {NewStatus}. Reason: {Reason}",
+                    userId,
+                    newStatus,
+                    reason ?? "Not provided");
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating account status for user {UserId}", userId);
+                throw;
+            }
         }
     }
 }

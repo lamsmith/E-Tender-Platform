@@ -177,5 +177,24 @@ namespace AuthService.WebAPI.Controllers
         //    {
         //        public string RefreshToken { get; set; }
         //    }
+
+        [HttpPut("{userId}/status")]
+        [Authorize(Roles = "Admin,SuperAdmin")]
+        public async Task<IActionResult> UpdateAccountStatus(Guid userId, [FromBody] UpdateAccountStatusRequest request)
+        {
+            try
+            {
+                var result = await _authService.UpdateAccountStatusAsync(userId, request.NewStatus, request.Reason);
+                if (!result)
+                    return NotFound(new { message = "User not found" });
+
+                return Ok(new { message = "Account status updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating account status for user {UserId}", userId);
+                return StatusCode(500, new { message = "Error updating account status" });
+            }
+        }
     }
 }
