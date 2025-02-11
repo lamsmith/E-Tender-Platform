@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using AuthService.Infrastructure.ExternalServices;
 using SharedLibrary.MessageBroker;
 using Serilog;
+using AuthService.Infrastructure.Persistence.Seeds;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,6 +81,24 @@ app.UseHttpsRedirection();
 // Add authentication middleware
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Add this section for database migration and seeding
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AuthDbContext>();
+        var logger = services.GetRequiredService<ILogger<AuthDbContextSeed>>();
+        await context.Database.MigrateAsync();
+        await AuthDbContextSeed.SeedAsync(context, logger);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating or seeding the database.");
+    }
+}
 
 app.MapControllers();
 

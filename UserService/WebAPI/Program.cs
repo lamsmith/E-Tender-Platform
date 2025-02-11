@@ -18,23 +18,23 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using UserService.Infrastructure.MessageConsumers;
+using Microsoft.Extensions.Logging;
+using UserService.Infrastructure.Persistence.Seeds;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args) // ? Change to async Task Main
     {
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddDbContext<UserDbContext>(options =>
-        options.UseNpgsql(builder.Configuration.GetConnectionString("sqlConnection")));
+            options.UseNpgsql(builder.Configuration.GetConnectionString("sqlConnection")));
 
         // Add services to the container.
-
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IUserService, UserServices>();
 
-
-        //JWT
+        // JWT Authentication
         builder.Services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -55,22 +55,16 @@ public class Program
             options.MapInboundClaims = false;
         });
 
-
-
-
-        //RabbitMQ
+        // RabbitMQ
         builder.Services.AddSharedRabbitMQ();
         builder.Services.AddScoped<UserMessagePublisher>();
-        //builder.Services.AddHostedService<MassTransitConsoleHostedService>();
 
         builder.Services.AddHttpContextAccessor();
 
-
-        //REDIS
+        // Redis Caching
         builder.Services.AddStackExchangeRedisCache(options =>
         {
             options.Configuration = builder.Configuration.GetConnectionString("Redis");
-
         });
 
         // Register cache service
@@ -80,7 +74,6 @@ public class Program
         builder.Services.AddScoped<UserCreatedConsumer>();
 
         builder.Services.AddControllers();
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
@@ -94,15 +87,29 @@ public class Program
         }
 
         app.UseHttpsRedirection();
-
         app.UseAuthentication();
-
         app.UseAuthorization();
-
-
         app.MapControllers();
 
-        app.Run();
+        // ? Ensure database migration and seeding runs asynchronously
+        using (var scope = app.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            try
+            {
+                var context = services.GetRequiredService<UserDbContext>();
+                var logger = services.GetRequiredService<ILogger<UserDbContextSeed>>();
+                
+                await context.Database.MigrateAsync(); // ? Fixed: Now runs asynchronously
+                await UserDbContextSeed.SeedAsync(context, logger); // ? Fixed: Now runs asynchronously
+            }
+            catch (Exception ex)
+            {
+                var logger = services.GetRequiredService<ILogger<Program>>();
+                logger.LogError(ex, "An error occurred while migrating or seeding the database.");
+            }
+        }
+
+        await app.RunAsync(); // ? Use RunAsync() instead of Run()
     }
 }
-
