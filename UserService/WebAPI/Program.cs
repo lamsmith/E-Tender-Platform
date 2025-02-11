@@ -8,7 +8,6 @@ using StackExchange.Redis;
 using System.Text;
 using UserService.Application.Common.Interface.Repositories;
 using UserService.Application.Common.Interface.Services;
-using UserService.Infrastructure.JWT;
 using UserService.Infrastructure.Persistence.Context;
 using UserService.Infrastructure.Repositories;
 using UserService.Infrastructure.Services;
@@ -56,7 +55,6 @@ public class Program
             options.MapInboundClaims = false;
         });
 
-        builder.Services.AddScoped<IJwtTokenService, JwtTokenGenerator>();
 
 
 

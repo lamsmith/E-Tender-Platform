@@ -10,15 +10,18 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
     public class ApproveUserCommandHandler : IRequestHandler<ApproveUserCommand, bool>
     {
         private readonly IAuthServiceClient _authServiceClient;
+        private readonly IUserProfileServiceClient _userProfileServiceClient;
         private readonly IMessagePublisher _messagePublisher;
         private readonly ILogger<ApproveUserCommandHandler> _logger;
 
         public ApproveUserCommandHandler(
             IAuthServiceClient authServiceClient,
+            IUserProfileServiceClient userProfileServiceClient,
             IMessagePublisher messagePublisher,
             ILogger<ApproveUserCommandHandler> logger)
         {
             _authServiceClient = authServiceClient;
+            _userProfileServiceClient = userProfileServiceClient;
             _messagePublisher = messagePublisher;
             _logger = logger;
         }
@@ -27,7 +30,7 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
         {
             try
             {
-                var userDetails = await _authServiceClient.GetUserDetailsAsync(request.UserId);
+                var userDetails = await _userProfileServiceClient.GetUserDetailsAsync(request.UserId);
                 var result = await _authServiceClient.UpdateUserVerificationStatusAsync(request.UserId, true, request.Notes);
 
                 if (result)

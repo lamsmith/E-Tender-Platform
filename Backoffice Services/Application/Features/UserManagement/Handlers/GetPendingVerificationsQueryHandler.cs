@@ -14,13 +14,16 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
     public class GetPendingVerificationsQueryHandler : IRequestHandler<GetPendingVerificationsQuery, List<UserVerificationDto>>
     {
         private readonly IAuthServiceClient _authServiceClient;
+        private readonly IUserProfileServiceClient _userProfileServiceClient;
         private readonly ILogger<GetPendingVerificationsQueryHandler> _logger;
 
         public GetPendingVerificationsQueryHandler(
             IAuthServiceClient authServiceClient,
+            IUserProfileServiceClient userProfileServiceClient,
             ILogger<GetPendingVerificationsQueryHandler> logger)
         {
             _authServiceClient = authServiceClient;
+            _userProfileServiceClient = userProfileServiceClient;
             _logger = logger;
         }
 
@@ -28,16 +31,16 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
         {
             try
             {
-                var pendingUsers = await _authServiceClient.GetPendingVerificationsAsync();
+                var pendingUsers = await _userProfileServiceClient.GetPendingVerificationsAsync();
 
                 var verificationDtos = new List<UserVerificationDto>();
 
                 foreach (var user in pendingUsers)
                 {
-                    var userDetails = await _authServiceClient.GetUserDetailsAsync(user.Id);
+                    var userDetails = await _userProfileServiceClient.GetUserDetailsAsync(user.UserId);
                     verificationDtos.Add(new UserVerificationDto
                     {
-                        UserId = user.Id,
+                        UserId = user.UserId,
                         Email = user.Email,
                         Role = user.Role,
                         FirstName = userDetails.FirstName,

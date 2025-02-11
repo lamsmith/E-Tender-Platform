@@ -18,47 +18,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
             _logger = logger;
         }
 
-        public async Task<UserDetailsDto> GetUserDetailsAsync(Guid userId)
-        {
-            try
-            {
-                var response = await _httpClient.GetAsync($"/api/users/{userId}");
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError("Failed to fetch user details. Status: {StatusCode}", response.StatusCode);
-                    throw new Exception("Failed to fetch user details from AuthService");
-                }
-
-                var userDetails = await response.Content.ReadFromJsonAsync<UserDetailsDto>();
-                return userDetails;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error fetching user details for ID: {UserId}", userId);
-                throw;
-            }
-        }
-
-        public async Task<List<UserDetailsDto>> GetPendingVerificationsAsync()
-        {
-            try
-            {
-                var response = await _httpClient.GetAsync("/api/users/pending-verification");
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError("Failed to fetch pending verifications. Status: {StatusCode}", response.StatusCode);
-                    throw new Exception("Failed to fetch pending verifications from AuthService");
-                }
-
-                var pendingUsers = await response.Content.ReadFromJsonAsync<List<UserDetailsDto>>();
-                return pendingUsers;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error fetching pending verifications");
-                throw;
-            }
-        } 
+       
 
         public async Task<bool> UpdateUserVerificationStatusAsync(Guid userId, bool isApproved, string reason = null)
         {
@@ -122,46 +82,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
             }
         }
 
-        public async Task<List<UserDetailsDto>> GetIncompleteOnboardingUsersAsync()
-
-        {
-
-            try
-
-            {
-
-                var response = await _httpClient.GetAsync("/api/users/incomplete-onboarding");
-
-                if (!response.IsSuccessStatusCode)
-
-                {
-
-                    _logger.LogError("Failed to fetch incomplete onboarding users. Status: {StatusCode}", response.StatusCode);
-
-                    throw new Exception("Failed to fetch incomplete onboarding users from AuthService");
-
-                }
-
-
-
-                var users = await response.Content.ReadFromJsonAsync<List<UserDetailsDto>>();
-
-                return users;
-
-            }
-
-            catch (Exception ex)
-
-            {
-
-                _logger.LogError(ex, "Error fetching incomplete onboarding users");
-
-                throw;
-
-            }
-
-        }
-
+      
         private class CreateStaffUserResponse
         {
             public Guid UserId { get; set; }

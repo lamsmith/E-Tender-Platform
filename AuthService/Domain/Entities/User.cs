@@ -1,13 +1,14 @@
 using AuthService.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 using SharedLibrary.Enums;
+using AuthService.Domain.Common;
 
 namespace AuthService.Domain.Entities
 {
-    public class User
+    public class User : BaseEntity
     {
         [Key]
-        public Guid Id { get; set; }
+   
         public string Email { get; set; }
         public string PasswordHash { get; set; }
         public Role Role { get; set; }
@@ -20,6 +21,5 @@ namespace AuthService.Domain.Entities
         public DateTime? RefreshTokenExpiryTime { get; set; }
         public bool EmailConfirmed { get; set; } = false;
         public AccountStatus Status { get; set; } = AccountStatus.Pending;
-        public DateTime? UpdatedAt { get; set; }
     }
 }

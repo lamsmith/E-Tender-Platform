@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using NotificationService.Infrastructure.Cache;
 using NotificationService.Infrastructure.Extensions;
 using NotificationService.Infrastructure.Messaging;
+using NotificationService.Infrastructure.Persistence.Context;
 using NotificationService.MessageBroker;
 using NotificationService.Services;
 using SharedLibrary.Constants;
@@ -17,43 +18,31 @@ namespace NotificationService.WebAPI
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
-            builder.Services.AddSharedRabbitMQ();
-
-
-            builder.Services.AddHttpContextAccessor();
-
             builder.Services.AddControllers();
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
 
-            // Configure Redis
+            // Add DbContext
+            builder.Services.AddDbContext<NotificationDbContext>(options =>
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            // Add Redis Cache
             builder.Services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = builder.Configuration.GetConnectionString("Redis");
+                options.InstanceName = "NotificationService_";
             });
 
-            // Add services
+            // Add Services
             builder.Services.AddScoped<IEmailService, EmailService>();
-            builder.Services.AddScoped<IMessageConsumer, EmailMessageConsumer>();
-
-
-            // Register cache service
             builder.Services.AddScoped<ICacheService, RedisCacheService>();
 
-            // Register message consumers and start listening
-            builder.Services.AddScoped<IMessageConsumer, UserVerificationMessageConsumer>();
-            builder.Services.AddScoped<IMessageConsumer, OnboardingReminderMessageConsumer>();
-            builder.Services.AddHostedService<NotificationConsumer>();
+            // Add RabbitMQ
+            builder.Services.AddRabbitMQ();
 
-            // Configure message broker subscriptions
-            builder.Services.AddMessageSubscriber(options =>
-            {
-                options.AddConsumer<UserVerificationMessageConsumer>(MessageQueues.UserVerification);
-                options.AddConsumer<OnboardingReminderMessageConsumer>(MessageQueues.OnboardingReminder);
-            });
-
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            // Add Message Consumers
+            builder.Services.AddMessageConsumer<UserVerificationStatusConsumer>(MessageQueues.UserVerification);
+            builder.Services.AddMessageConsumer<OnboardingReminderMessageConsumer>(MessageQueues.OnboardingReminder);
 
             var app = builder.Build();
 
@@ -65,10 +54,7 @@ namespace NotificationService.WebAPI
             }
 
             app.UseHttpsRedirection();
-
             app.UseAuthorization();
-
-
             app.MapControllers();
 
             app.Run();

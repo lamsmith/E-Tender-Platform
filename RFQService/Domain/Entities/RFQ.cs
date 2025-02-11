@@ -10,6 +10,7 @@ namespace RFQService.Domain.Entities
         public string PaymentTerms { get; set; }
         public string DeliveryTerms { get; set; }
         public string OtherInformation { get; set; }
+        public string CompanyName { get; set; }
         public DateTime Deadline { get; set; }
         public Status Status { get; set; }
         public VisibilityType Visibility { get; set; }

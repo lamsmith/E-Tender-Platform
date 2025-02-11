@@ -43,9 +43,11 @@ namespace BidService.Infrastructure.Persistence.Repositories
             var cachedBid = await GetCachedBidAsync(id);
             if (cachedBid != null) return cachedBid;
 
-            // If not in cache, get from DB and cache it
+            // Fetch from DB and include related files
             var bid = await _context.Bids
-                .Include(b => b.ProposalFiles)
+                .Include(b => b.CompanyProfile)
+                .Include(b => b.ProjectPlan)
+                .Include(b => b.ProposalFile)
                 .FirstOrDefaultAsync(b => b.Id == id);
 
             if (bid != null) await CacheBidAsync(bid);
@@ -77,7 +79,7 @@ namespace BidService.Infrastructure.Persistence.Repositories
             // Apply filtering if a keyword is provided
             if (!string.IsNullOrEmpty(pageRequest.Keyword))
             {
-                query = query.Where(b => b.Amount.ToString().Contains(pageRequest.Keyword)); // Example filtering, adjust as needed
+                query = query.Where(b => b.Proposal.Contains(pageRequest.Keyword));
             }
 
             var totalItems = await query.CountAsync();

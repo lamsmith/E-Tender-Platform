@@ -2,8 +2,6 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
 {
     public interface IAuthServiceClient
     {
-        Task<AuthUserDto> GetUserDetailsAsync(Guid userId);
-        Task<List<PendingVerificationDto>> GetPendingVerificationsAsync();
         Task<bool> UpdateUserVerificationStatusAsync(Guid userId, bool isApproved, string reason = null);
         Task<(Guid UserId, string TempPassword)> CreateStaffUserAsync(string email, string role);
         Task NotifyStaffUserAsync(Guid userId);
@@ -20,12 +18,12 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
         public DateTime? LastLoginAt { get; set; }
     }
 
-    public class PendingVerificationDto
-    {
-        public Guid UserId { get; set; }
-        public string Email { get; set; }
-        public string Role { get; set; }
-        public DateTime CreatedAt { get; set; }
-    }
+    //public class PendingVerificationDto
+    //{
+    //    public Guid UserId { get; set; }
+    //    public string Email { get; set; }
+    //    public string Role { get; set; }
+    //    public DateTime CreatedAt { get; set; }
+    //}
 }
 

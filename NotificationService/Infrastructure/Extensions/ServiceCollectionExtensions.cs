@@ -7,6 +7,19 @@ namespace NotificationService.Infrastructure.Extensions
 {
     public static class ServiceCollectionExtensions
     {
+        public static IServiceCollection AddMessageConsumer<TConsumer>(
+            this IServiceCollection services,
+            string queueName) where TConsumer : class, IMessageConsumer
+        {
+            services.AddScoped<TConsumer>();
+            services.Configure<MessageSubscriberOptions>(options =>
+            {
+                options.AddConsumer<TConsumer>(queueName);
+            });
+
+            return services;
+        }
+
         public static IServiceCollection AddMessageSubscriber(
             this IServiceCollection services,
             Action<MessageSubscriberOptions> configureOptions)
@@ -14,12 +27,14 @@ namespace NotificationService.Infrastructure.Extensions
             var options = new MessageSubscriberOptions();
             configureOptions(options);
 
-            foreach (var registration in options.ConsumerRegistrations)
+            services.Configure<MessageSubscriberOptions>(config =>
             {
-                services.AddScoped(registration.ConsumerType);
-            }
+                foreach (var registration in options.ConsumerRegistrations)
+                {
+                    config.ConsumerRegistrations.Add(registration);
+                }
+            });
 
-            services.AddSingleton(options);
             services.AddHostedService<MessageSubscriberService>();
 
             return services;
@@ -30,7 +45,7 @@ namespace NotificationService.Infrastructure.Extensions
     {
         public List<ConsumerRegistration> ConsumerRegistrations { get; } = new();
 
-        public void AddConsumer<TConsumer>(string queueName) where TConsumer : class, IMessageConsumer
+        public void AddConsumer<TConsumer>(string queueName) where TConsumer : IMessageConsumer
         {
             ConsumerRegistrations.Add(new ConsumerRegistration
             {

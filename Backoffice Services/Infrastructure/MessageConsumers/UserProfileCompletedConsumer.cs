@@ -1,37 +1,35 @@
 using SharedLibrary.MessageBroker.Implementation;
 using SharedLibrary.Models.Messages;
-using MediatR;
 using Microsoft.Extensions.Logging;
 using SharedLibrary.Constants;
-using Backoffice_Services.Application.Features.UserManagement.Queries;
 using Backoffice_Services.Infrastructure.ExternalServices;
+using System.Text.Json;
 
 namespace Backoffice_Services.Infrastructure.MessageConsumers
 {
     public class UserProfileCompletedConsumer : MessageConsumer
     {
-        private readonly IAuthServiceClient _authServiceClient;
+        private readonly IUserProfileServiceClient _userProfileServiceClient;
         private readonly ILogger<UserProfileCompletedConsumer> _logger;
 
         public UserProfileCompletedConsumer(
-            IAuthServiceClient authServiceClient,
-            ILogger<UserProfileCompletedConsumer> logger) : base(logger)
+            IRabbitMQConnection rabbitMQConnection,
+            IUserProfileServiceClient userProfileServiceClient,
+            ILogger<UserProfileCompletedConsumer> logger)
+            : base(rabbitMQConnection, logger)
         {
-            _authServiceClient = authServiceClient;
+            _userProfileServiceClient = userProfileServiceClient;
+            _logger = logger;
         }
 
-        public override async Task ConsumeAsync(string messageType, string message)
+        protected override async Task ProcessMessage(string messageType, string message)
         {
             try
             {
-                var profileCompletedMessage = System.Text.Json.JsonSerializer.Deserialize<UserProfileCompletedMessage>(message);
-                var userDetails = await _authServiceClient.GetUserDetailsAsync(profileCompletedMessage.UserId);
+                var profileCompletedMessage = JsonSerializer.Deserialize<UserProfileCompletedMessage>(message);
+                var userDetails = await _userProfileServiceClient.GetUserDetailsAsync(profileCompletedMessage.UserId);
 
-                _logger.LogInformation(
-                    "User {UserId} profile completed, pending verification. Email: {Email}, Role: {Role}",
-                    profileCompletedMessage.UserId,
-                    userDetails.Email,
-                    userDetails.Role);
+                _logger.LogInformation("Processed profile completion for user: {Email}", userDetails.Email);
             }
             catch (Exception ex)
             {

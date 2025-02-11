@@ -1,4 +1,5 @@
 using AuthService.Domain.Enums;
+using SharedLibrary.Enums;
 
 namespace AuthService.Application.DTO.Responses
 {
