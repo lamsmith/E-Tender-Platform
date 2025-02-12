@@ -18,7 +18,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
             _logger = logger;
         }
 
-       
+
 
         public async Task<bool> UpdateUserVerificationStatusAsync(Guid userId, bool isApproved, string reason = null)
         {
@@ -82,11 +82,37 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
             }
         }
 
-      
+        public async Task<bool> UpdateAccountStatusAsync(Guid userId, SharedLibrary.Enums.AccountStatus newStatus, string? reason = null)
+        {
+            try
+            {
+                var request = new
+                {
+                    NewStatus = newStatus,
+                    Reason = reason
+                };
+
+                var response = await _httpClient.PutAsJsonAsync($"api/users/{userId}/status", request);
+                response.EnsureSuccessStatusCode();
+
+                _logger.LogInformation("Successfully updated account status for user {UserId} to {Status}",
+                    userId, newStatus);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating account status for user {UserId} to {Status}",
+                    userId, newStatus);
+                throw;
+            }
+        }
+
+
         private class CreateStaffUserResponse
         {
             public Guid UserId { get; set; }
             public string TempPassword { get; set; }
         }
     }
-} 
+}

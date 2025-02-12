@@ -75,7 +75,7 @@ namespace NotificationService.Infrastructure.Messaging
                 {
                     Notification = new Notification
                     {
-                        UserId = Guid.Parse(userCreated.UserId),
+                        UserId = userCreated.UserId,
                         Message = $"Welcome {userCreated.FirstName}! Your account has been created successfully.",
                         Type = "UserCreated",
                         IsRead = false,

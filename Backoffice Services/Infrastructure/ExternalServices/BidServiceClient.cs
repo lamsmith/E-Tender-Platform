@@ -136,17 +136,14 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
         {
             try
             {
-                var request = new { Status = status, Notes = notes };
-                var response = await _httpClient.PutAsJsonAsync($"api/bids/{bidId}/status", request);
+                var response = await _httpClient.PutAsJsonAsync(
+                    $"api/bids/{bidId}/status",
+                    new { Status = status, Notes = notes });
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError("Failed to update bid status. Status: {StatusCode}", response.StatusCode);
-                    throw new Exception("Failed to update bid status in Bid Service");
-                }
+                response.EnsureSuccessStatusCode();
 
-                // Invalidate relevant caches
-                await InvalidateBidCaches(bidId);
+                // Use the new method with isRfq = false for bid-specific cache
+                await InvalidateBidCaches(bidId, isRfq: false);
 
                 return true;
             }
@@ -157,35 +154,28 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
             }
         }
 
-        private async Task InvalidateBidCaches(Guid bidId)
+        private async Task InvalidateBidCaches(Guid id, bool isRfq = false)
         {
             try
             {
-                // Remove specific bid cache
-                await _cacheService.RemoveAsync($"bid:{bidId}");
-
-                // Note: In a production environment, you might want to implement a more sophisticated 
-                // cache invalidation strategy, such as using cache tags or patterns
+                if (isRfq)
+                {
+                    // Remove RFQ-specific bid list caches
+                    var cacheKey = $"bids:rfq:{id}:*";
+                    await _cacheService.RemoveAsync(cacheKey);
+                    await _cacheService.RemoveAsync($"rfq_{id}_bids");
+                }
+                else
+                {
+                    // Remove bid-specific caches
+                    await _cacheService.RemoveAsync($"bid_{id}");
+                    await _cacheService.RemoveAsync("bids_all");
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error invalidating bid caches for BidId: {BidId}", bidId);
-            }
-        }
-
-        private async Task InvalidateBidCaches(Guid rfqId)
-        {
-            try
-            {
-                // Remove RFQ-specific bid list caches
-                // Note: This is a simplified approach. In production, you might want to use Redis SCAN
-                // to find and remove all related cache entries
-                var cacheKey = $"bids:{rfqId}:*";
-                await _cacheService.RemoveAsync(cacheKey);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error invalidating bid caches for RfqId: {RfqId}", rfqId);
+                _logger.LogError(ex, "Error invalidating bid caches for {Type} {Id}",
+                    isRfq ? "RfqId" : "BidId", id);
             }
         }
 

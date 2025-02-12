@@ -9,16 +9,16 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
 {
     public class SendOnboardingReminderCommandHandler : IRequestHandler<SendOnboardingReminderCommand, bool>
     {
-        private readonly IAuthServiceClient _authServiceClient;
+        private readonly IUserProfileServiceClient _userProfileClient;
         private readonly IMessagePublisher _messagePublisher;
         private readonly ILogger<SendOnboardingReminderCommandHandler> _logger;
 
         public SendOnboardingReminderCommandHandler(
-            IAuthServiceClient authServiceClient,
+            IUserProfileServiceClient userProfileClient,
             IMessagePublisher messagePublisher,
             ILogger<SendOnboardingReminderCommandHandler> logger)
         {
-            _authServiceClient = authServiceClient;
+            _userProfileClient = userProfileClient;
             _messagePublisher = messagePublisher;
             _logger = logger;
         }
@@ -27,31 +27,37 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
         {
             try
             {
-                var userDetails = await _authServiceClient.GetUserDetailsAsync(request.UserId);
+                var userProfile = await _userProfileClient.GetUserProfileAsync(request.UserId);
+                var incompleteTasks = new List<string>();
 
-                var daysRegistered = (int)(DateTime.UtcNow - userDetails.CreatedAt).TotalDays;
-
-                var message = new OnboardingReminderMessage
+                // Check for incomplete profile
+                if (!userProfile.IsProfileCompleted)
                 {
-                    UserId = request.UserId,
-                    Email = userDetails.Email,
-                    IncompleteTasks = request.IncompleteTasks,
-                    DaysRegistered = daysRegistered,
-                    LastLoginAt = userDetails.LastLoginAt ?? userDetails.CreatedAt
-                };
+                    incompleteTasks.Add("Complete your profile information");
+                }
 
-                _messagePublisher.PublishMessage(MessageQueues.OnboardingReminder, message);
+                // Add other incomplete task checks as needed
 
-                _logger.LogInformation(
-                    "Sent onboarding reminder for user {UserId} with {Count} incomplete tasks",
-                    request.UserId,
-                    request.IncompleteTasks.Count);
+                if (incompleteTasks.Any())
+                {
+                    var message = new OnboardingReminderMessage
+                    {
+                        UserId = request.UserId,
+                        Email = userProfile.Email,
+                        IncompleteTasks = incompleteTasks,
+                        DaysRegistered = (int)(DateTime.UtcNow - userProfile.CreatedAt).TotalDays,
+                        LastLoginAt = userProfile.LastLoginAt ?? DateTime.UtcNow
+                    };
 
-                return true;
+                    _messagePublisher.PublishMessage(MessageQueues.OnboardingReminder, message);
+                    return true;
+                }
+
+                return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error sending onboarding reminder for user: {UserId}", request.UserId);
+                _logger.LogError(ex, "Error sending onboarding reminder for user {UserId}", request.UserId);
                 throw;
             }
         }

@@ -5,6 +5,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
         Task<bool> UpdateUserVerificationStatusAsync(Guid userId, bool isApproved, string reason = null);
         Task<(Guid UserId, string TempPassword)> CreateStaffUserAsync(string email, string role);
         Task NotifyStaffUserAsync(Guid userId);
+        Task<bool> UpdateAccountStatusAsync(Guid userId, SharedLibrary.Enums.AccountStatus newStatus, string? reason = null);
     }
 
     public class AuthUserDto

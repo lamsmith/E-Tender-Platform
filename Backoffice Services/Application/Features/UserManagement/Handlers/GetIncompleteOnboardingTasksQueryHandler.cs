@@ -7,14 +7,14 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
     public class GetIncompleteOnboardingTasksQueryHandler
         : IRequestHandler<GetIncompleteOnboardingTasksQuery, List<OnboardingTaskDto>>
     {
-        private readonly IAuthServiceClient _authServiceClient;
+        private readonly IUserProfileServiceClient _userProfileClient;
         private readonly ILogger<GetIncompleteOnboardingTasksQueryHandler> _logger;
 
         public GetIncompleteOnboardingTasksQueryHandler(
-            IAuthServiceClient authServiceClient,
+            IUserProfileServiceClient userProfileClient,
             ILogger<GetIncompleteOnboardingTasksQueryHandler> logger)
         {
-            _authServiceClient = authServiceClient;
+            _userProfileClient = userProfileClient;
             _logger = logger;
         }
 
@@ -24,37 +24,27 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
         {
             try
             {
-                var userDetails = await _authServiceClient.GetUserDetailsAsync(request.UserId);
+                var userProfile = await _userProfileClient.GetUserProfileAsync(request.UserId);
                 var tasks = new List<OnboardingTaskDto>();
 
-                // Check email verification
-                if (!userDetails.EmailConfirmed)
+                // Add tasks based on profile completion
+                if (!userProfile.IsProfileCompleted)
                 {
                     tasks.Add(new OnboardingTaskDto
                     {
-                        TaskName = "Email Verification",
-                        Description = "Verify your email address to activate your account",
-                        IsCompleted = false,
+                        TaskName = "Complete Profile",
+                        Description = "Please complete your profile information",
                         OrderIndex = 1
                     });
                 }
 
-                // Add role-specific tasks
-                switch (userDetails.Role?.ToLower())
-                {
-                    case "supplier":
-                        tasks.AddRange(GetSupplierTasks());
-                        break;
-                    case "buyer":
-                        tasks.AddRange(GetBuyerTasks());
-                        break;
-                }
+                // Add other tasks as needed...
 
-                return tasks.OrderBy(t => t.OrderIndex).ToList();
+                return tasks;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting incomplete onboarding tasks for user: {UserId}", request.UserId);
+                _logger.LogError(ex, "Error getting incomplete onboarding tasks for user {UserId}", request.UserId);
                 throw;
             }
         }

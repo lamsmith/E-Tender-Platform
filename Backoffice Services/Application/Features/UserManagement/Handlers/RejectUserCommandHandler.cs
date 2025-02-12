@@ -10,15 +10,18 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
     public class RejectUserCommandHandler : IRequestHandler<RejectUserCommand, bool>
     {
         private readonly IAuthServiceClient _authServiceClient;
+        private readonly IUserProfileServiceClient _userProfileClient;
         private readonly IMessagePublisher _messagePublisher;
         private readonly ILogger<RejectUserCommandHandler> _logger;
 
         public RejectUserCommandHandler(
             IAuthServiceClient authServiceClient,
+            IUserProfileServiceClient userProfileClient,
             IMessagePublisher messagePublisher,
             ILogger<RejectUserCommandHandler> logger)
         {
             _authServiceClient = authServiceClient;
+            _userProfileClient = userProfileClient;
             _messagePublisher = messagePublisher;
             _logger = logger;
         }
@@ -27,32 +30,31 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
         {
             try
             {
-                var result = await _authServiceClient.UpdateUserVerificationStatusAsync(
+                var userProfile = await _userProfileClient.GetUserProfileAsync(request.UserId);
+
+                var result = await _authServiceClient.UpdateAccountStatusAsync(
                     request.UserId,
-                    false,
+                    SharedLibrary.Enums.AccountStatus.NotVerified,
                     request.RejectionReason);
 
                 if (result)
                 {
-                    var userDetails = await _authServiceClient.GetUserDetailsAsync(request.UserId);
-
                     var message = new UserVerificationMessage
                     {
                         UserId = request.UserId,
-                        Email = userDetails.Email,
                         Status = "Rejected",
                         Notes = request.RejectionReason,
                         VerifiedAt = DateTime.UtcNow
                     };
 
-                    _messagePublisher.PublishMessage(MessageQueues.Notifications, message);
+                    _messagePublisher.PublishMessage(MessageQueues.UserVerification, message);
                 }
 
                 return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error rejecting user: {UserId}", request.UserId);
+                _logger.LogError(ex, "Error rejecting user {UserId}", request.UserId);
                 throw;
             }
         }

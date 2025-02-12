@@ -99,7 +99,7 @@ public class Program
             {
                 var context = services.GetRequiredService<UserDbContext>();
                 var logger = services.GetRequiredService<ILogger<UserDbContextSeed>>();
-                
+
                 await context.Database.MigrateAsync(); // ? Fixed: Now runs asynchronously
                 await UserDbContextSeed.SeedAsync(context, logger); // ? Fixed: Now runs asynchronously
             }

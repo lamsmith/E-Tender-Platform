@@ -49,8 +49,7 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
                         PhoneNumber = userDetails.PhoneNumber,
                         Address = userDetails.Address,
                         Industry = userDetails.Industry,
-                        CreatedAt = user.CreatedAt,
-                        ProfileCompletedAt = userDetails.ProfileCompletedAt
+                        CreatedAt = user.CreatedAt
                     });
                 }
 
@@ -62,12 +61,12 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
 
                 if (request.FromDate.HasValue)
                 {
-                    verificationDtos = verificationDtos.Where(u => u.ProfileCompletedAt >= request.FromDate.Value).ToList();
+                    verificationDtos = verificationDtos.Where(u => u.CreatedAt >= request.FromDate.Value).ToList();
                 }
 
                 if (request.ToDate.HasValue)
                 {
-                    verificationDtos = verificationDtos.Where(u => u.ProfileCompletedAt <= request.ToDate.Value).ToList();
+                    verificationDtos = verificationDtos.Where(u => u.CreatedAt <= request.ToDate.Value).ToList();
                 }
 
                 return verificationDtos;
