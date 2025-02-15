@@ -2,11 +2,11 @@
 {
     public enum PermissionType
     {
-        ManageStaff,
-        ManageTenders,
-        ViewReports,
-        ManageUsers,
-        ApproveSubmissions
-      
+        None = 0,
+        RfqManagement = 1,
+        BidManagement = 2,
+        UserManagement = 3,
+        KycReview = 4,
+        SystemConfiguration = 5
     }
 }

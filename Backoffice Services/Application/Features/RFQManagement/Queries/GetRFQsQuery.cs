@@ -1,6 +1,6 @@
 using Backoffice_Services.Application.DTO.RFQManagement.Responses;
+using Backoffice_Services.Domain.Paging;
 using MediatR;
-using RFQService.Domain.Paging;
 
 namespace Backoffice_Services.Application.Features.RFQManagement.Queries
 {

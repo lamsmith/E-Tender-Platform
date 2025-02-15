@@ -1,19 +1,16 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Serilog;
+using Backoffice_Services.Domain.Enums;
 using Backoffice_Services.Infrastructure.Authorization;
 using Backoffice_Services.Infrastructure.Cache;
 using Backoffice_Services.Infrastructure.ExternalServices;
-using Backoffice_Services.Infrastructure.MessageConsumers;
 using Backoffice_Services.Infrastructure.Persistence.Context;
-using SharedLibrary.Constants;
-using SharedLibrary.MessageBroker;
-using Backoffice_Services.Domain.Enums;
+using MassTransit;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using NotificationService.Infrastructure.Extensions;
+using Microsoft.IdentityModel.Tokens;
+using Serilog;
+using System.Text;
 
 namespace Backoffice_Services.WebAPI
 {
@@ -65,25 +62,38 @@ namespace Backoffice_Services.WebAPI
                     };
                 });
 
-            // Configure Authorization
-            builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+            // Add Authorization handlers
+            builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
+
+            // Add Authorization policies
             builder.Services.AddAuthorization(options =>
             {
-                options.AddPolicy("RequirePermission", policy =>
-                    policy.Requirements.Add(new PermissionRequirement(PermissionType.ManageStaff)));
+                options.AddPolicy("RequireRfqManagement", policy =>
+                    policy.Requirements.Add(new PermissionRequirement(PermissionType.RfqManagement)));
+
+                options.AddPolicy("RequireBidManagement", policy =>
+                    policy.Requirements.Add(new PermissionRequirement(PermissionType.BidManagement)));
+
+                options.AddPolicy("RequireKycReview", policy =>
+                    policy.Requirements.Add(new PermissionRequirement(PermissionType.KycReview)));
             });
 
-            // Register RabbitMQ Message Broker
-            builder.Services.AddRabbitMQ();
-
-            // Register Message Consumers as SINGLETONS
-            builder.Services.AddSingleton<UserProfileCompletedConsumer>();
-
-            // Register Message Broker Subscriptions
-            builder.Services.AddMessageSubscriber(options =>
+            // Configure MassTransit
+            builder.Services.AddMassTransit(x =>
             {
-                options.AddConsumer<UserProfileCompletedConsumer>(MessageQueues.UserProfileCompleted);
+                x.UsingRabbitMq((context, cfg) =>
+                {
+                    cfg.Host(builder.Configuration["RabbitMQ:HostName"] ?? "localhost", "/", h =>
+                    {
+                        h.Username(builder.Configuration["RabbitMQ:UserName"] ?? "guest");
+                        h.Password(builder.Configuration["RabbitMQ:Password"] ?? "guest");
+                    });
+
+                    cfg.ConfigureEndpoints(context);
+                });
             });
+
+
 
             // Add HTTP Clients
             builder.Services.AddHttpClient<IAuthServiceClient, AuthServiceClient>();

@@ -2,24 +2,23 @@ using Backoffice_Services.Application.Features.BidManagement.Commands;
 using Backoffice_Services.Infrastructure.ExternalServices;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using SharedLibrary.MessageBroker;
-using SharedLibrary.Constants;
+using MassTransit;
 
 namespace Backoffice_Services.Application.Features.BidManagement.Handlers
 {
     public class UpdateBidStatusCommandHandler : IRequestHandler<UpdateBidStatusCommand, bool>
     {
         private readonly IBidServiceClient _bidServiceClient;
-        private readonly IMessagePublisher _messagePublisher;
+        private readonly IPublishEndpoint _publishEndpoint;
         private readonly ILogger<UpdateBidStatusCommandHandler> _logger;
 
         public UpdateBidStatusCommandHandler(
             IBidServiceClient bidServiceClient,
-            IMessagePublisher messagePublisher,
+            IPublishEndpoint publishEndpoint,
             ILogger<UpdateBidStatusCommandHandler> logger)
         {
             _bidServiceClient = bidServiceClient;
-            _messagePublisher = messagePublisher;
+            _publishEndpoint = publishEndpoint;
             _logger = logger;
         }
 
@@ -31,15 +30,14 @@ namespace Backoffice_Services.Application.Features.BidManagement.Handlers
 
                 if (result)
                 {
-                    // Publish notification for bid status update
-                    _messagePublisher.PublishMessage(MessageQueues.Notifications, new
+                    await _publishEndpoint.Publish(new BidStatusUpdatedMessage
                     {
                         Type = "BidStatusUpdated",
                         BidId = request.BidId,
                         NewStatus = request.Status,
                         Notes = request.Notes,
                         Timestamp = DateTime.UtcNow
-                    });
+                    }, cancellationToken);
                 }
 
                 return result;

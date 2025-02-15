@@ -1,28 +1,26 @@
+using MassTransit;
 using MediatR;
-using Backoffice_Services.Infrastructure.ExternalServices;
-using SharedLibrary.MessageBroker;
-using SharedLibrary.Models.Messages;
-using SharedLibrary.Constants;
+using Microsoft.Extensions.Logging;
 using Backoffice_Services.Application.Features.UserManagement.Commands;
+using Backoffice_Services.Infrastructure.ExternalServices;
+using SharedLibrary.Models.Messages.UserEvents;
+using SharedLibrary.Enums;
 
 namespace Backoffice_Services.Application.Features.UserManagement.Handlers
 {
     public class RejectUserCommandHandler : IRequestHandler<RejectUserCommand, bool>
     {
         private readonly IAuthServiceClient _authServiceClient;
-        private readonly IUserProfileServiceClient _userProfileClient;
-        private readonly IMessagePublisher _messagePublisher;
+        private readonly IPublishEndpoint _publishEndpoint;
         private readonly ILogger<RejectUserCommandHandler> _logger;
 
         public RejectUserCommandHandler(
             IAuthServiceClient authServiceClient,
-            IUserProfileServiceClient userProfileClient,
-            IMessagePublisher messagePublisher,
+            IPublishEndpoint publishEndpoint,
             ILogger<RejectUserCommandHandler> logger)
         {
             _authServiceClient = authServiceClient;
-            _userProfileClient = userProfileClient;
-            _messagePublisher = messagePublisher;
+            _publishEndpoint = publishEndpoint;
             _logger = logger;
         }
 
@@ -30,31 +28,29 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
         {
             try
             {
-                var userProfile = await _userProfileClient.GetUserProfileAsync(request.UserId);
-
                 var result = await _authServiceClient.UpdateAccountStatusAsync(
                     request.UserId,
-                    SharedLibrary.Enums.AccountStatus.NotVerified,
+                    AccountStatus.NotVerified,
                     request.RejectionReason);
 
                 if (result)
                 {
-                    var message = new UserVerificationMessage
+                    await _publishEndpoint.Publish(new UserVerificationStatusMessage
                     {
                         UserId = request.UserId,
                         Status = "Rejected",
-                        Notes = request.RejectionReason,
-                        VerifiedAt = DateTime.UtcNow
-                    };
+                        UpdatedAt = DateTime.UtcNow,
+                        Reason = request.RejectionReason
+                    }, cancellationToken);
 
-                    _messagePublisher.PublishMessage(MessageQueues.UserVerification, message);
+                    _logger.LogInformation("User rejected successfully. User ID: {UserId}", request.UserId);
                 }
 
                 return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error rejecting user {UserId}", request.UserId);
+                _logger.LogError(ex, "Error rejecting user. User ID: {UserId}", request.UserId);
                 throw;
             }
         }

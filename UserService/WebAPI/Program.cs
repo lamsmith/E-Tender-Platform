@@ -23,7 +23,7 @@ using UserService.Infrastructure.Persistence.Seeds;
 
 public class Program
 {
-    public static async Task Main(string[] args) // ? Change to async Task Main
+    public static async Task Main(string[] args) 
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -55,9 +55,27 @@ public class Program
             options.MapInboundClaims = false;
         });
 
-        // RabbitMQ
-        builder.Services.AddSharedRabbitMQ();
-        builder.Services.AddScoped<UserMessagePublisher>();
+        // Configure MassTransit
+        builder.Services.AddMassTransit(x =>
+        {
+            // Add consumers
+            x.AddConsumer<UserCreatedConsumer>();
+
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                cfg.Host(builder.Configuration["RabbitMQ:HostName"] ?? "localhost", "/", h =>
+                {
+                    h.Username(builder.Configuration["RabbitMQ:UserName"] ?? "guest");
+                    h.Password(builder.Configuration["RabbitMQ:Password"] ?? "guest");
+                });
+
+                // Configure endpoints
+                cfg.ConfigureEndpoints(context);
+            });
+        });
+
+
+        
 
         builder.Services.AddHttpContextAccessor();
 

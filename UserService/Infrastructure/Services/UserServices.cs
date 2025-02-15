@@ -1,9 +1,11 @@
-﻿using System.Security.Cryptography;
+﻿using SharedLibrary.Models.Messages;
+using System.Security.Cryptography;
 using System.Text;
 using UserService.Application.Common.Interface.Repositories;
 using UserService.Application.Common.Interface.Services;
 using UserService.Application.DTO.Requests;
 using UserService.Domain.Entities;
+using UserService.Domain.Paging;
 
 namespace UserService.Infrastructure.Services
 {
@@ -16,64 +18,7 @@ namespace UserService.Infrastructure.Services
             _userRepository = userRepository;
         }
 
-        private bool VerifyPassword(string password, byte[] storedHash, byte[] storedSalt)
-        {
-            if (string.IsNullOrEmpty(password)) throw new ArgumentException("Password cannot be null or empty.", nameof(password));
-            if (storedHash == null || storedHash.Length == 0) throw new ArgumentException("Invalid password hash.", nameof(storedHash));
-            if (storedSalt == null || storedSalt.Length == 0) throw new ArgumentException("Invalid password salt.", nameof(storedSalt));
-
-            using (var hmac = new HMACSHA512(storedSalt))
-            {
-                var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return computedHash.SequenceEqual(storedHash);
-            }
-        }
-
-        private byte[] GenerateSalt()
-        {
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                var salt = new byte[16]; // 128 bits
-                rng.GetBytes(salt);
-                return salt;
-            }
-        }
-
-        private byte[] HashPasswordWithSalt(string password, byte[] salt)
-        {
-            if (string.IsNullOrEmpty(password)) throw new ArgumentException("Password cannot be null or empty.", nameof(password));
-            if (salt == null || salt.Length == 0) throw new ArgumentException("Invalid salt.", nameof(salt));
-
-            using (var hmac = new HMACSHA512(salt))
-            {
-                return hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-            }
-        }
-
-        public async Task<User> UpdateProfileAsync(Guid userId, CompleteProfileRequest request)
-        {
-            var user = await _userRepository.GetByIdAsync(userId);
-            if (user == null)
-            {
-                throw new KeyNotFoundException($"User not found with ID: {userId}");
-            }
-
-            // Update profile information
-            user.Profile = new Profile
-            {
-                UserId = userId,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                CompanyName = request.CompanyName,
-                PhoneNumber = request.PhoneNumber,
-                Address = request.Address,
-                Industry = request.Industry
-            };
-
-            await _userRepository.UpdateAsync(user);
-
-            return user;
-        }
+        
 
         public async Task<User> CompleteProfileAsync(Guid userId, CompleteProfileRequest request)
         {
@@ -89,15 +34,10 @@ namespace UserService.Infrastructure.Services
                 UserId = userId,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                CompanyName = request.CompanyName,
-                PhoneNumber = request.PhoneNumber,
-                Address = request.Address,
-                Industry = request.Industry,
-                CreatedAt = DateTime.UtcNow
             };
 
             await _userRepository.UpdateAsync(user);
-           
+
 
             return user;
         }
@@ -110,23 +50,46 @@ namespace UserService.Infrastructure.Services
 
         public async Task<int> GetUserCountAsync() => await _userRepository.GetCountAsync();
 
-        public async Task<User> UpdateProfileAsync(Guid userId, UserProfileUpdateRequestModel profileUpdate)
+
+        public async Task<User> SubmitKycAsync(Guid userId, KycSubmissionRequest request)
         {
-            var user = await _userRepository.GetByIdAsync(userId);
+            var user = await GetUserByIdAsync(userId);
             if (user == null)
             {
-                throw new ArgumentException("User not found.");
+                throw new KeyNotFoundException($"User not found with ID: {userId}");
             }
 
-            // Update profile details
-            if (!string.IsNullOrEmpty(profileUpdate.FirstName))
-                user.Profile.FirstName = profileUpdate.FirstName;
-            if (!string.IsNullOrEmpty(profileUpdate.LastName))
-                user.Profile.LastName = profileUpdate.LastName;
-            // Update other profile fields as necessary
+            // Handle company logo upload if provided
+            if (request.CompanyLogo != null)
+            {
+                // TODO: Implement file upload logic
+                var companyLogo = new CompanyLogo
+                {
+                    FileName = request.CompanyLogo.FileName,
+                    FileType = request.CompanyLogo.ContentType
+                    // Set FileUrl after upload
+                };
+                user.Profile.CompanyLogo = companyLogo;
+            }
+
+            // Update KYC information using existing Profile fields
+            user.Profile.CompanyName = request.CompanyName;
+            user.Profile.PhoneNumber = request.PhoneNumber;
+            user.Profile.CompanyAddress = request.CompanyAddress;
+            user.Profile.Industry = request.Industry;
+            user.Profile.State = request.State;
+            user.Profile.City = request.City;
 
             await _userRepository.UpdateAsync(user);
+
             return user;
+
+          
+        }
+
+        public async Task<PaginatedList<User>> GetIncompleteProfilesAsync(PageRequest pageRequest)
+        {
+            return await _userRepository.GetIncompleteProfilesAsync(pageRequest);
         }
     }
 }

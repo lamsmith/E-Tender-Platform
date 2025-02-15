@@ -1,24 +1,25 @@
+using MassTransit;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Backoffice_Services.Infrastructure.ExternalServices;
 using Backoffice_Services.Application.Features.RFQManagement.Commands;
-using SharedLibrary.MessageBroker;
-using SharedLibrary.Constants;
+using SharedLibrary.Models.Messages.RfqEvents;
 
 namespace Backoffice_Services.Application.Features.RFQManagement.Handlers
 {
     public class UpdateRFQStatusCommandHandler : IRequestHandler<UpdateRFQStatusCommand, bool>
     {
         private readonly IRFQServiceClient _rfqServiceClient;
-        private readonly IMessagePublisher _messagePublisher;
+        private readonly IPublishEndpoint _publishEndpoint;
         private readonly ILogger<UpdateRFQStatusCommandHandler> _logger;
 
         public UpdateRFQStatusCommandHandler(
             IRFQServiceClient rfqServiceClient,
-            IMessagePublisher messagePublisher,
+            IPublishEndpoint publishEndpoint,
             ILogger<UpdateRFQStatusCommandHandler> logger)
         {
             _rfqServiceClient = rfqServiceClient;
-            _messagePublisher = messagePublisher;
+            _publishEndpoint = publishEndpoint;
             _logger = logger;
         }
 
@@ -37,27 +38,23 @@ namespace Backoffice_Services.Application.Features.RFQManagement.Handlers
 
                 if (result)
                 {
-                    // Publish status update event
-                    _messagePublisher.PublishMessage(MessageQueues.RFQStatusUpdated, new
+                    await _publishEndpoint.Publish(new RfqStatusUpdatedMessage
                     {
-                        RFQId = request.RFQId,
+                        RfqId = request.RFQId,
                         NewStatus = request.Status,
-                        ContractTitle = rfq.ContractTitle,
+                        UpdatedByUserId = rfq.CreatedByUserId,
                         UpdatedAt = DateTime.UtcNow
-                    });
+                    }, cancellationToken);
 
-                    _logger.LogInformation(
-                        "Updated RFQ {RFQId} status to {Status}",
-                        request.RFQId,
-                        request.Status);
+                    _logger.LogInformation("RFQ status updated. RFQ ID: {RfqId}, New Status: {Status}",
+                        request.RFQId, request.Status);
                 }
 
                 return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating RFQ status: {RFQId}, {Status}",
-                    request.RFQId, request.Status);
+                _logger.LogError(ex, "Error updating RFQ status. RFQ ID: {RfqId}", request.RFQId);
                 throw;
             }
         }

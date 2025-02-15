@@ -8,6 +8,9 @@ using Microsoft.Extensions.Logging;
 using SharedLibrary.Constants;
 using SharedLibrary.Models.Messages;
 using SharedLibrary.MessageBroker;
+using MassTransit;
+using MediatR;
+using UserService.Domain.Paging;
 
 namespace UserService.WebAPI.Controllers
 {
@@ -18,19 +21,22 @@ namespace UserService.WebAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly ICacheService _cacheService;
-        private readonly IMessagePublisher _messagePublisher;
         private readonly ILogger<UserController> _logger;
+        private readonly IPublishEndpoint _publishEndpoint;
+        private readonly IMediator _mediator;
 
         public UserController(
             IUserService userService,
             ICacheService cacheService,
-            IMessagePublisher messagePublisher,
-            ILogger<UserController> logger)
+            ILogger<UserController> logger,
+            IPublishEndpoint publishEndpoint,
+            IMediator mediator)
         {
             _userService = userService;
             _cacheService = cacheService;
-            _messagePublisher = messagePublisher;
             _logger = logger;
+            _publishEndpoint = publishEndpoint;
+            _mediator = mediator;
         }
 
         [HttpGet("profile")]
@@ -59,58 +65,58 @@ namespace UserService.WebAPI.Controllers
             }
         }
 
-        [HttpPut("profile")]
-        public async Task<IActionResult> UpdateProfile([FromBody] UserProfileUpdateRequestModel request)
+        [HttpPost("submit-kyc")]
+        public async Task<IActionResult> SubmitKyc([FromForm] KycSubmissionRequest request)
         {
             try
             {
                 var userId = Guid.Parse(User.FindFirst("userId")?.Value);
-                var updatedUser = await _userService.UpdateProfileAsync(userId, request);
+                var user = await _userService.SubmitKycAsync(userId, request);
 
-                // Invalidate cache
-                await _cacheService.RemoveAsync($"user_profile_{userId}");
-
-                return Ok(updatedUser);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        [HttpPost("complete-profile")]
-        public async Task<IActionResult> CompleteProfile([FromBody] CompleteProfileRequest request)
-        {
-            try
-            {
-                var userId = Guid.Parse(User.FindFirst("userId")?.Value);
-                var user = await _userService.UpdateProfileAsync(userId, request);
-
-                // Publish profile completed message
-                _messagePublisher.PublishMessage(MessageQueues.UserProfileCompleted, new UserProfileCompletedMessage
+                // Publish KYC submission message for backoffice review
+                await _publishEndpoint.Publish(new KycSubmittedMessage
                 {
                     UserId = userId,
-                    CompletedAt = DateTime.UtcNow,
-                    IsVerified = false // Will be verified by admin
+                    CompanyName = request.CompanyName,
+                    RcNumber = request.RcNumber,
+                    CompanyAddress = request.CompanyAddress,
+                    Industry = request.Industry,
+                    PhoneNumber = request.PhoneNumber,
+                    State = request.State,
+                    City = request.City,
+                    SubmittedAt = DateTime.UtcNow
                 });
 
                 // Invalidate cache
                 await _cacheService.RemoveAsync($"user_profile_{userId}");
 
-                return Ok(user);
+                return Ok(new
+                {
+                    message = "KYC details submitted successfully and pending review",
+                    user = user
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Error completing profile" });
+                _logger.LogError(ex, "Error submitting KYC for user {UserId}", User.FindFirst("userId")?.Value);
+                return StatusCode(500, new { message = "Error submitting KYC details" });
             }
         }
 
-       
-        public class UserStatistics
+        [HttpGet("incomplete-profiles")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetIncompleteProfiles( [FromQuery] PageRequest pageRequest)
         {
-            public int RfqCreated { get; set; }
-            public int BidsSubmitted { get; set; }
-            public decimal BidSuccessRate { get; set; }
+            try
+            {
+                var result = await _userService.GetIncompleteProfilesAsync(pageRequest);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving incomplete profiles");
+                return StatusCode(500, new { message = "Error retrieving incomplete profiles" });
+            }
         }
     }
 }

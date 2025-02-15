@@ -1,19 +1,18 @@
-using SharedLibrary.MessageBroker;
+using MassTransit;
 using SharedLibrary.Models.Messages;
-using SharedLibrary.Constants;
 
 namespace UserService.Infrastructure.Messaging
 {
     public class UserMessagePublisher
     {
-        private readonly IMessagePublisher _messagePublisher;
+        private readonly IPublishEndpoint _publishEndpoint;
 
-        public UserMessagePublisher(IMessagePublisher messagePublisher)
+        public UserMessagePublisher(IPublishEndpoint publishEndpoint)
         {
-            _messagePublisher = messagePublisher;
+            _publishEndpoint = publishEndpoint;
         }
 
-        public void PublishUserCreated(Guid userId, string email, string username)
+        public async Task PublishUserCreatedAsync(Guid userId, string email, string username)
         {
             var message = new UserCreatedMessage
             {
@@ -22,8 +21,7 @@ namespace UserService.Infrastructure.Messaging
                 CreatedAt = DateTime.UtcNow
             };
 
-            _messagePublisher.PublishMessage(MessageQueues.UserCreated, message);
-            _messagePublisher.PublishMessage(MessageQueues.Notifications, message);
+            await _publishEndpoint.Publish(message);
         }
     }
 }

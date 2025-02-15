@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace RFQService.Domain.Paging
+namespace Backoffice_Services.Domain.Paging
 {
     public class PageRequest
     {

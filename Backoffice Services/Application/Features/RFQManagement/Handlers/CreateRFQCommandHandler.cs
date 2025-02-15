@@ -2,24 +2,24 @@ using MediatR;
 using Backoffice_Services.Infrastructure.ExternalServices;
 using Backoffice_Services.Application.DTO.RFQManagement.Responses;
 using Backoffice_Services.Application.Features.RFQManagement.Commands;
-using SharedLibrary.MessageBroker;
-using SharedLibrary.Constants;
+using MassTransit;
+using SharedLibrary.Models.Messages.RfqEvents;
 
 namespace Backoffice_Services.Application.Features.RFQManagement.Handlers
 {
     public class CreateRFQCommandHandler : IRequestHandler<CreateRFQCommand, RFQResponseModel>
     {
         private readonly IRFQServiceClient _rfqServiceClient;
-        private readonly IMessagePublisher _messagePublisher;
+        private readonly IPublishEndpoint _publishEndpoint;
         private readonly ILogger<CreateRFQCommandHandler> _logger;
 
         public CreateRFQCommandHandler(
             IRFQServiceClient rfqServiceClient,
-            IMessagePublisher messagePublisher,
+            IPublishEndpoint publishEndpoint,
             ILogger<CreateRFQCommandHandler> logger)
         {
             _rfqServiceClient = rfqServiceClient;
-            _messagePublisher = messagePublisher;
+            _publishEndpoint = publishEndpoint;
             _logger = logger;
         }
 
@@ -30,14 +30,14 @@ namespace Backoffice_Services.Application.Features.RFQManagement.Handlers
                 var createdRFQ = await _rfqServiceClient.CreateRFQAsync(request);
 
                 // Publish event for notification
-                _messagePublisher.PublishMessage(MessageQueues.RFQCreated, new
-                {
-                    RFQId = createdRFQ.Id,
-                    CreatedByUserId = request.CreatedByUserId,
-                    ContractTitle = request.ContractTitle,
-                    Visibility = request.Visibility,
-                    CreatedAt = DateTime.UtcNow
-                });
+                //await _publishEndpoint.Publish(new RfqCreatedMessage
+                //{
+                //    RFQId = createdRFQ.Id,
+                //    CreatedByUserId = request.CreatedByUserId,
+                //    ContractTitle = request.ContractTitle,
+                //    Visibility = request.Visibility,
+                //    CreatedAt = DateTime.UtcNow
+                //}, cancellationToken);
 
                 _logger.LogInformation(
                     "Created RFQ {RFQId} by user {UserId}",

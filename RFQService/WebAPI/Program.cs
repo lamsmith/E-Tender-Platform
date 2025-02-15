@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using RabbitMQ.Client;
 using SharedLibrary.MessageBroker;
-using RFQService.Infrastructure.Messaging;
 using StackExchange.Redis;
 using RFQService.Infrastructure.Cache;
+using MassTransit;
+using RFQService.Infrastructure.MessageConsumers;
 
 namespace RFQService.WebAPI
 {
@@ -31,9 +32,26 @@ namespace RFQService.WebAPI
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            // Add RabbitMQ services
-            builder.Services.AddSharedRabbitMQ();
-            builder.Services.AddScoped<RfqMessagePublisher>();
+
+
+            // Configure MassTransit
+            builder.Services.AddMassTransit(x =>
+            {
+                // Add consumers
+                x.AddConsumer<RfqStatusUpdateConsumer>();
+
+                x.UsingRabbitMq((context, cfg) =>
+                {
+                    cfg.Host(builder.Configuration["RabbitMQ:HostName"] ?? "localhost", "/", h =>
+                    {
+                        h.Username(builder.Configuration["RabbitMQ:UserName"] ?? "guest");
+                        h.Password(builder.Configuration["RabbitMQ:Password"] ?? "guest");
+                    });
+
+                    // Configure endpoints
+                    cfg.ConfigureEndpoints(context);
+                });
+            });
 
             var app = builder.Build();
 

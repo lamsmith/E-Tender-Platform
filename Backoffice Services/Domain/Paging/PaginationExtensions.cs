@@ -1,4 +1,4 @@
-﻿namespace RFQService.Domain.Paging
+﻿namespace Backoffice_Services.Domain.Paging
 {
     public static class PaginationExtensions
     {

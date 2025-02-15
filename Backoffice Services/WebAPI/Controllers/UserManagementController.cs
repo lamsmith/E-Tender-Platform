@@ -124,7 +124,7 @@ namespace Backoffice_Services.WebAPI.Controllers
                 var command = new SendOnboardingReminderCommand
                 {
                     UserId = userId,
-                    IncompleteTasks = incompleteTasks.Select(t => t.TaskName).ToList()
+                    //IncompleteTasks = incompleteTasks.Select(t => t.TaskName).ToList()
                 };
 
                 var result = await _mediator.Send(command);

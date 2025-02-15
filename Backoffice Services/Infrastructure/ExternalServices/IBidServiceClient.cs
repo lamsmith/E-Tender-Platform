@@ -1,7 +1,7 @@
 using Backoffice_Services.Application.DTO.BidManagement.Common;
 using Backoffice_Services.Application.DTO.BidManagement.Responses;
 using Backoffice_Services.Application.Features.BidManagement.Commands;
-using RFQService.Domain.Paging;
+using Backoffice_Services.Domain.Paging;
 
 namespace Backoffice_Services.Infrastructure.ExternalServices
 {

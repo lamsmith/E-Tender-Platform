@@ -1,9 +1,9 @@
 using BidService.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using SharedLibrary.MessageBroker;
-using BidService.Infrastructure.Messaging;
 using BidService.Infrastructure.Cache;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
+using MassTransit;
 
 namespace BidService.WebAPI
 {
@@ -20,9 +20,22 @@ namespace BidService.WebAPI
             builder.Services.AddDbContext<BidDbContext>(options =>
             options.UseNpgsql(builder.Configuration.GetConnectionString("sqlConnection")));
 
-            // Add RabbitMQ services
-            builder.Services.AddSharedRabbitMQ();
-            builder.Services.AddScoped<BidMessagePublisher>();
+          
+
+            // Configure MassTransit
+            builder.Services.AddMassTransit(x =>
+            {
+                x.UsingRabbitMq((context, cfg) =>
+                {
+                    cfg.Host(builder.Configuration["RabbitMQ:HostName"] ?? "localhost", "/", h =>
+                    {
+                        h.Username(builder.Configuration["RabbitMQ:UserName"] ?? "guest");
+                        h.Password(builder.Configuration["RabbitMQ:Password"] ?? "guest");
+                    });
+
+                    cfg.ConfigureEndpoints(context);
+                });
+            });
 
             // Configure Redis
             builder.Services.AddStackExchangeRedisCache(options =>

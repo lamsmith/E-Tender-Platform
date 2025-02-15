@@ -33,9 +33,14 @@ namespace AuthService.WebAPI.Controllers
         {
             try
             {
-                await _authService.RegisterCorporateUserAsync(request);
+                request.Role = Role.Corporate; // Ensure role is set correctly
+                var result = await _authService.RegisterCorporateUserAsync(request);
 
-                return Ok(new { message = "Corporate user registered successfully." });
+                return Ok(new
+                {
+                    message = "Corporate user registered successfully.",
+                    userId = result.UserId
+                });
             }
             catch (Exception ex)
             {
@@ -44,14 +49,19 @@ namespace AuthService.WebAPI.Controllers
             }
         }
 
-        [HttpPost("register/corporate")]
+        [HttpPost("register/msme")]  // Fixed the duplicate route
         public async Task<IActionResult> RegisterMSMEUser([FromBody] UserRegistrationRequestModel request)
         {
             try
             {
-                await _authService.RegisterMSMEUserAsync(request);
+                request.Role = Role.MSME; // Ensure role is set correctly
+                var result = await _authService.RegisterMSMEUserAsync(request);
 
-                return Ok(new { message = "MSME user registered successfully." });
+                return Ok(new
+                {
+                    message = "MSME user registered successfully.",
+                    userId = result.UserId
+                });
             }
             catch (Exception ex)
             {

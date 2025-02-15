@@ -13,7 +13,6 @@ namespace UserService.Application.Common.Interface.Repositories
         Task DeleteAsync(Guid id);
         Task<User> GetByEmailAsync(string email);
         Task<int> GetCountAsync();
-        
-
+        Task<PaginatedList<User>> GetIncompleteProfilesAsync(PageRequest pageRequest);
     }
 }

@@ -1,7 +1,7 @@
 using Backoffice_Services.Application.DTO.BidManagement.Common;
 using Backoffice_Services.Application.DTO.BidManagement.Responses;
+using Backoffice_Services.Domain.Paging;
 using MediatR;
-using RFQService.Domain.Paging;
 
 namespace Backoffice_Services.Application.Features.BidManagement.Queries
 {

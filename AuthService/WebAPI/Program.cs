@@ -12,6 +12,7 @@ using AuthService.Infrastructure.ExternalServices;
 using SharedLibrary.MessageBroker;
 using Serilog;
 using AuthService.Infrastructure.Persistence.Seeds;
+using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +49,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// Configure MassTransit
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(builder.Configuration["RabbitMQ:HostName"] ?? "localhost", "/", h =>
+        {
+            h.Username(builder.Configuration["RabbitMQ:UserName"] ?? "guest");
+            h.Password(builder.Configuration["RabbitMQ:Password"] ?? "guest");
+        });
+
+        // Configure message topology
+        cfg.ConfigureEndpoints(context);
+    });
+});
+
 // Add DbContext
 builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -60,9 +77,6 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenGenerator>();
 builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>();
-
-// Register Message Broker
-builder.Services.AddSharedRabbitMQ();
 
 // Register Application Services
 builder.Services.AddScoped<IAuthService, AuthServiceImpl>();

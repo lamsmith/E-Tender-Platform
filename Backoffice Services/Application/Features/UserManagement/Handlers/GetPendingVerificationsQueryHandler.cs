@@ -47,7 +47,7 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
                         LastName = userDetails.LastName,
                         CompanyName = userDetails.CompanyName,
                         PhoneNumber = userDetails.PhoneNumber,
-                        Address = userDetails.Address,
+                        //Address = userDetails.Address,
                         Industry = userDetails.Industry,
                         CreatedAt = user.CreatedAt
                     });

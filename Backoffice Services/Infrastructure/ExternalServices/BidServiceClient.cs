@@ -2,9 +2,9 @@ using System.Net.Http.Json;
 using Backoffice_Services.Application.DTO.BidManagement.Common;
 using Backoffice_Services.Application.DTO.BidManagement.Responses;
 using Backoffice_Services.Application.Features.BidManagement.Commands;
+using Backoffice_Services.Domain.Paging;
 using Backoffice_Services.Infrastructure.Cache;
 using Microsoft.Extensions.Configuration;
-using RFQService.Domain.Paging;
 
 namespace Backoffice_Services.Infrastructure.ExternalServices
 {

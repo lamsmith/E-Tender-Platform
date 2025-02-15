@@ -14,6 +14,7 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using SharedLibrary.Enums;
+using MassTransit;
 
 namespace AuthService.Infrastructure.Services
 {
@@ -22,24 +23,24 @@ namespace AuthService.Infrastructure.Services
         private readonly IUserRepository _userRepository;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IUserServiceClient _userServiceClient;
-        private readonly IMessagePublisher _messagePublisher;
+        private readonly IPublishEndpoint _publishEndpoint;
         private readonly ILogger<AuthServiceImpl> _logger;
 
         public AuthServiceImpl(
             IUserRepository userRepository,
             IJwtTokenService jwtTokenService,
             IUserServiceClient userServiceClient,
-            IMessagePublisher messagePublisher,
+            IPublishEndpoint publishEndpoint,
             ILogger<AuthServiceImpl> logger)
         {
             _userRepository = userRepository;
             _jwtTokenService = jwtTokenService;
             _userServiceClient = userServiceClient;
-            _messagePublisher = messagePublisher;
+            _publishEndpoint = publishEndpoint;
             _logger = logger;
         }
 
-        public async Task RegisterCorporateUserAsync(UserRegistrationRequestModel request)
+        public async Task<(Guid UserId, string Email)> RegisterCorporateUserAsync(UserRegistrationRequestModel request)
         {
             try
             {
@@ -50,15 +51,6 @@ namespace AuthService.Infrastructure.Services
                     _logger.LogWarning("Registration failed - Email already exists: {Email}", request.Email);
                     throw new Exception("Email already exists");
                 }
-
-
-                if (request.Role == Role.Admin || request.Role == Role.Staff)
-                {
-                    _logger.LogWarning("Registration failed -Cannot register as Admin or Staff.");
-                    throw new Exception("Cannot register as Admin or Staff.");
-                }
-
-
 
                 var authUser = new User
                 {
@@ -74,16 +66,22 @@ namespace AuthService.Infrastructure.Services
 
                 await _userRepository.CreateAsync(authUser);
 
+                // Publish the user creation event with profile data
                 var createUserMessage = new CreateUserMessage
                 {
                     UserId = authUser.Id,
                     Email = authUser.Email,
-                    CreatedAt = authUser.CreatedAt
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    CreatedAt = DateTime.UtcNow
+ 
                 };
 
-                _messagePublisher.PublishMessage(MessageQueues.UserCreated, createUserMessage);
+                await _publishEndpoint.Publish(createUserMessage);
 
                 _logger.LogInformation("User successfully registered: {Email}", request.Email);
+
+                return (authUser.Id, authUser.Email);
             }
             catch (Exception ex)
             {
@@ -92,7 +90,7 @@ namespace AuthService.Infrastructure.Services
             }
         }
 
-        public async Task RegisterMSMEUserAsync(UserRegistrationRequestModel request)
+        public async Task<(Guid UserId, string Email)> RegisterMSMEUserAsync(UserRegistrationRequestModel request)
         {
             try
             {
@@ -103,15 +101,6 @@ namespace AuthService.Infrastructure.Services
                     _logger.LogWarning("Registration failed - Email already exists: {Email}", request.Email);
                     throw new Exception("Email already exists");
                 }
-
-
-                if (request.Role == Role.Admin || request.Role == Role.Staff)
-                {
-                    _logger.LogWarning("Registration failed -Cannot register as Admin or Staff.");
-                    throw new Exception("Cannot register as Admin or Staff.");
-                }
-
-
 
                 var authUser = new User
                 {
@@ -127,16 +116,21 @@ namespace AuthService.Infrastructure.Services
 
                 await _userRepository.CreateAsync(authUser);
 
+                // Publish the user creation event with profile data
                 var createUserMessage = new CreateUserMessage
                 {
                     UserId = authUser.Id,
                     Email = authUser.Email,
-                    CreatedAt = authUser.CreatedAt
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    CreatedAt = DateTime.UtcNow
                 };
 
-                _messagePublisher.PublishMessage(MessageQueues.UserCreated, createUserMessage);
+                await _publishEndpoint.Publish(createUserMessage);
 
                 _logger.LogInformation("User successfully registered: {Email}", request.Email);
+
+                return (authUser.Id, authUser.Email);
             }
             catch (Exception ex)
             {
@@ -187,7 +181,7 @@ namespace AuthService.Infrastructure.Services
                     Email = user.Email
                 };
 
-                _messagePublisher.PublishMessage(MessageQueues.Notifications, message);
+                await _publishEndpoint.Publish(message);
             }
             catch (Exception ex)
             {
@@ -333,8 +327,7 @@ namespace AuthService.Infrastructure.Services
 
                 await _userRepository.UpdateAsync(user);
 
-                // Publish status change event
-                _messagePublisher.PublishMessage(MessageQueues.UserStatusChanged, new UserStatusChangedMessage
+                await _publishEndpoint.Publish(new UserStatusChangedMessage
                 {
                     UserId = userId,
                     NewStatus = newStatus,

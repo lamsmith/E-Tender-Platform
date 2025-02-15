@@ -2,9 +2,9 @@ using Backoffice_Services.Application.DTO.RFQManagement.Responses;
 using Backoffice_Services.Application.Features.RFQManagement.Queries;
 using Backoffice_Services.Infrastructure.ExternalServices;
 using MediatR;
-using RFQService.Domain.Paging;
 using Backoffice_Services.Application.DTO.RFQManagement.Common;
 using Microsoft.Extensions.Logging;
+using Backoffice_Services.Domain.Paging;
 
 namespace Backoffice_Services.Application.Features.RFQManagement.Handlers
 {

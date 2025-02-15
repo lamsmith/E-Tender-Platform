@@ -1,28 +1,26 @@
+using MassTransit;
 using MediatR;
-using Backoffice_Services.Infrastructure.ExternalServices;
-using SharedLibrary.MessageBroker;
-using SharedLibrary.Models.Messages;
-using SharedLibrary.Constants;
+using Microsoft.Extensions.Logging;
 using Backoffice_Services.Application.Features.UserManagement.Commands;
+using Backoffice_Services.Infrastructure.ExternalServices;
+using SharedLibrary.Models.Messages.UserEvents;
+using SharedLibrary.Enums;
 
 namespace Backoffice_Services.Application.Features.UserManagement.Handlers
 {
     public class ApproveUserCommandHandler : IRequestHandler<ApproveUserCommand, bool>
     {
         private readonly IAuthServiceClient _authServiceClient;
-        private readonly IUserProfileServiceClient _userProfileServiceClient;
-        private readonly IMessagePublisher _messagePublisher;
+        private readonly IPublishEndpoint _publishEndpoint;
         private readonly ILogger<ApproveUserCommandHandler> _logger;
 
         public ApproveUserCommandHandler(
             IAuthServiceClient authServiceClient,
-            IUserProfileServiceClient userProfileServiceClient,
-            IMessagePublisher messagePublisher,
+            IPublishEndpoint publishEndpoint,
             ILogger<ApproveUserCommandHandler> logger)
         {
             _authServiceClient = authServiceClient;
-            _userProfileServiceClient = userProfileServiceClient;
-            _messagePublisher = messagePublisher;
+            _publishEndpoint = publishEndpoint;
             _logger = logger;
         }
 
@@ -30,29 +28,29 @@ namespace Backoffice_Services.Application.Features.UserManagement.Handlers
         {
             try
             {
-                var userDetails = await _userProfileServiceClient.GetUserDetailsAsync(request.UserId);
-                var result = await _authServiceClient.UpdateUserVerificationStatusAsync(request.UserId, true, request.Notes);
+                var result = await _authServiceClient.UpdateAccountStatusAsync(
+                    request.UserId,
+                    AccountStatus.Verified,
+                    request.Notes);
 
                 if (result)
                 {
-                    // Publish verification status message
-                    _messagePublisher.PublishMessage(MessageQueues.UserVerification, new UserVerificationStatusChangedMessage
+                    await _publishEndpoint.Publish(new UserVerificationStatusMessage
                     {
                         UserId = request.UserId,
-                        Email = userDetails.Email,
                         Status = "Approved",
-                        Reason = request.Notes,
-                        VerifiedAt = DateTime.UtcNow
-                    });
+                        UpdatedAt = DateTime.UtcNow,
+                        Reason = request.Notes
+                    }, cancellationToken);
 
-                    _logger.LogInformation("User {UserId} approved successfully", request.UserId);
+                    _logger.LogInformation("User approved successfully. User ID: {UserId}", request.UserId);
                 }
 
                 return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error approving user: {UserId}", request.UserId);
+                _logger.LogError(ex, "Error approving user. User ID: {UserId}", request.UserId);
                 throw;
             }
         }

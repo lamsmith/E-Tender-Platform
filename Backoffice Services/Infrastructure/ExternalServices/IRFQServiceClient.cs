@@ -1,7 +1,7 @@
 using Backoffice_Services.Application.DTO.RFQManagement.Responses;
 using Backoffice_Services.Application.Features.RFQManagement.Commands;
 using Backoffice_Services.Application.DTO.RFQManagement.Common;
-using RFQService.Domain.Paging;
+using Backoffice_Services.Domain.Paging;
 
 namespace Backoffice_Services.Infrastructure.ExternalServices
 {

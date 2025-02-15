@@ -3,24 +3,23 @@ using Backoffice_Services.Application.Features.BidManagement.Commands;
 using Backoffice_Services.Infrastructure.ExternalServices;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using SharedLibrary.MessageBroker;
-using SharedLibrary.Constants;
+using MassTransit;
 
 namespace Backoffice_Services.Application.Features.BidManagement.Handlers
 {
     public class SubmitBidCommandHandler : IRequestHandler<SubmitBidCommand, BidResponseModel>
     {
         private readonly IBidServiceClient _bidServiceClient;
-        private readonly IMessagePublisher _messagePublisher;
+        private readonly IPublishEndpoint _publishEndpoint;
         private readonly ILogger<SubmitBidCommandHandler> _logger;
 
         public SubmitBidCommandHandler(
             IBidServiceClient bidServiceClient,
-            IMessagePublisher messagePublisher,
+            IPublishEndpoint publishEndpoint,
             ILogger<SubmitBidCommandHandler> logger)
         {
             _bidServiceClient = bidServiceClient;
-            _messagePublisher = messagePublisher;
+            _publishEndpoint = publishEndpoint;
             _logger = logger;
         }
 
@@ -31,14 +30,14 @@ namespace Backoffice_Services.Application.Features.BidManagement.Handlers
                 var bid = await _bidServiceClient.SubmitBidAsync(request);
 
                 // Publish notification for bid submission
-                _messagePublisher.PublishMessage(MessageQueues.Notifications, new
+                await _publishEndpoint.Publish(new BidSubmittedMessage
                 {
                     Type = "BidSubmitted",
                     BidId = bid.Id,
                     RfqId = bid.RfqId,
                     UserId = bid.UserId,
                     Timestamp = DateTime.UtcNow
-                });
+                }, cancellationToken);
 
                 return bid;
             }

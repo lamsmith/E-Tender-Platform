@@ -1,9 +1,7 @@
-using System.Net.Http.Json;
+using Backoffice_Services.Application.DTO.RFQManagement.Common;
 using Backoffice_Services.Application.DTO.RFQManagement.Responses;
 using Backoffice_Services.Application.Features.RFQManagement.Commands;
-using Backoffice_Services.Application.Features.RFQManagement.Handlers;
-using Backoffice_Services.Application.DTO.RFQManagement.Common;
-using RFQService.Domain.Paging;
+using Backoffice_Services.Domain.Paging;
 
 namespace Backoffice_Services.Infrastructure.ExternalServices
 {
@@ -18,7 +16,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
             ILogger<RFQServiceClient> logger)
         {
             _httpClient = httpClient;
-            _httpClient.BaseAddress = new Uri(configuration["ExternalServices:RFQService:BaseUrl"]);
+            _httpClient.BaseAddress = new Uri(configuration["Services:RFQ:BaseUrl"]);
             _logger = logger;
         }
 
@@ -69,19 +67,11 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
         {
             try
             {
-                var response = await _httpClient.GetAsync($"/api/rfq/{rfqId}");
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError("Failed to fetch RFQ. Status: {StatusCode}", response.StatusCode);
-                    throw new Exception($"Failed to fetch RFQ {rfqId} from RFQ Service");
-                }
-
-                return await response.Content.ReadFromJsonAsync<RFQResponseModel>();
+                return await _httpClient.GetFromJsonAsync<RFQResponseModel>($"api/rfq/{rfqId}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching RFQ: {RFQId}", rfqId);
+                _logger.LogError(ex, "Error getting RFQ {RfqId}", rfqId);
                 throw;
             }
         }
@@ -90,12 +80,12 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
         {
             try
             {
-                var response = await _httpClient.PutAsJsonAsync($"/api/rfq/{rfqId}/status", new { Status = status });
+                var response = await _httpClient.PutAsJsonAsync($"api/rfq/{rfqId}/status", new { status });
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating RFQ status: {RFQId}, {Status}", rfqId, status);
+                _logger.LogError(ex, "Error updating RFQ status. RFQ: {RfqId}, Status: {Status}", rfqId, status);
                 throw;
             }
         }

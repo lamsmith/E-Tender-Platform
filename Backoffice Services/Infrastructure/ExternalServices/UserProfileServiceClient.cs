@@ -1,6 +1,9 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Backoffice_Services.Application.DTO.UserManagement.Responses;
+using Backoffice_Services.Domain.Paging;
+
 
 namespace Backoffice_Services.Infrastructure.ExternalServices
 {
@@ -19,7 +22,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
             _logger = logger;
         }
 
-        public async Task<UserProfileDto> GetUserDetailsAsync(Guid userId)
+        public async Task<UserDetailsResponseModel> GetUserDetailsAsync(Guid userId)
         {
             try
             {
@@ -30,7 +33,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
                     throw new Exception("Failed to fetch user details from UserService");
                 }
 
-                var userDetails = await response.Content.ReadFromJsonAsync<UserProfileDto>();
+                var userDetails = await response.Content.ReadFromJsonAsync<UserDetailsResponseModel>();
 
                 if (userDetails == null)
                 {
@@ -46,7 +49,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
             }
         }
 
-        public async Task<UserProfileDto> GetUserProfileAsync(Guid userId)
+        public async Task<UserDetailsResponseModel> GetUserProfileAsync(Guid userId)
         {
             try
             {
@@ -57,7 +60,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
                     throw new Exception("Failed to fetch user profile");
                 }
 
-                var userProfile = await response.Content.ReadFromJsonAsync<UserProfileDto>();
+                var userProfile = await response.Content.ReadFromJsonAsync<UserDetailsResponseModel>();
 
                 if (userProfile == null)
                 {
@@ -73,7 +76,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
             }
         }
 
-        public async Task<List<UserProfileDto>> GetUserProfilesAsync(IEnumerable<Guid> userIds)
+        public async Task<List<UserDetailsResponseModel>> GetUserProfilesAsync(IEnumerable<Guid> userIds)
         {
             try
             {
@@ -84,7 +87,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
                     throw new Exception("Failed to fetch user profiles");
                 }
 
-                var userProfiles = await response.Content.ReadFromJsonAsync<List<UserProfileDto>>();
+                var userProfiles = await response.Content.ReadFromJsonAsync<List<UserDetailsResponseModel>>();
 
                 if (userProfiles == null)
                 {
@@ -100,7 +103,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
             }
         }
 
-        public async Task<List<PendingVerificationDto>> GetPendingVerificationsAsync()
+        public async Task<List<PendingVerificationResponseModel>> GetPendingVerificationsAsync()
         {
             try
             {
@@ -111,7 +114,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
                     throw new Exception("Failed to fetch pending verifications from UserService");
                 }
 
-                var pendingUsers = await response.Content.ReadFromJsonAsync<List<PendingVerificationDto>>();
+                var pendingUsers = await response.Content.ReadFromJsonAsync<List<PendingVerificationResponseModel>>();
 
                 if (pendingUsers == null)
                 {
@@ -125,6 +128,50 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
                 _logger.LogError(ex, "Error fetching pending verifications");
                 throw;
             }
+        }
+
+        public async Task<PaginatedList<UserDetailsResponseModel>> GetUsersWithIncompleteProfilesAsync(PageRequest pageRequest)
+        {
+            try
+            {
+                var queryString = BuildQueryString(pageRequest);
+                var response = await _httpClient.GetAsync($"api/user/incomplete-profiles{queryString}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("Failed to fetch incomplete profiles. Status: {StatusCode}", response.StatusCode);
+                    throw new Exception("Failed to fetch incomplete profiles from User Service");
+                }
+
+                return await response.Content.ReadFromJsonAsync<PaginatedList<UserDetailsResponseModel>>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting incomplete profiles");
+                throw;
+            }
+        }
+
+        private string BuildQueryString(PageRequest pageRequest)
+        {
+            var query = new List<string>
+            {
+                $"page={pageRequest.Page}",
+                $"pageSize={pageRequest.PageSize}"
+            };
+
+            if (!string.IsNullOrWhiteSpace(pageRequest.SortBy))
+            {
+                query.Add($"sortBy={Uri.EscapeDataString(pageRequest.SortBy)}");
+                query.Add($"isAscending={pageRequest.IsAscending}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(pageRequest.Keyword))
+            {
+                query.Add($"keyword={Uri.EscapeDataString(pageRequest.Keyword)}");
+            }
+
+            return query.Any() ? "?" + string.Join("&", query) : string.Empty;
         }
     }
 }

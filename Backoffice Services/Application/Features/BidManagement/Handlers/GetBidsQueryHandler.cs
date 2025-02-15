@@ -1,9 +1,9 @@
 using Backoffice_Services.Application.DTO.BidManagement.Responses;
 using Backoffice_Services.Application.Features.BidManagement.Queries;
+using Backoffice_Services.Domain.Paging;
 using Backoffice_Services.Infrastructure.ExternalServices;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using RFQService.Domain.Paging;
 
 namespace Backoffice_Services.Application.Features.BidManagement.Handlers
 {

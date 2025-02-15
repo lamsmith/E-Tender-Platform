@@ -1,13 +1,9 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using NotificationService.Infrastructure.Cache;
-using NotificationService.Infrastructure.Extensions;
-using NotificationService.Infrastructure.Messaging;
+using NotificationService.Infrastructure.MessageConsumers;
 using NotificationService.Infrastructure.Persistence.Context;
-using NotificationService.MessageBroker;
 using NotificationService.Services;
-using SharedLibrary.Constants;
-using SharedLibrary.MessageBroker;
-using SharedLibrary.MessageBroker.Interfaces;
 
 namespace NotificationService.WebAPI
 {
@@ -37,12 +33,27 @@ namespace NotificationService.WebAPI
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<ICacheService, RedisCacheService>();
 
-            // Add RabbitMQ
-            builder.Services.AddRabbitMQ();
+            builder.Services.AddMassTransit(x =>
+            {
+                // Add consumers
+                x.AddConsumer<BidEventConsumer>();
+                x.AddConsumer<RfqEventConsumer>();
+                x.AddConsumer<UserVerificationStatusConsumer>();
+                x.AddConsumer<OnboardingReminderConsumer>();
+                x.AddConsumer<EmailNotificationConsumer>();
+                x.AddConsumer<NotificationConsumer>();
 
-            // Add Message Consumers
-            builder.Services.AddMessageConsumer<UserVerificationStatusConsumer>(MessageQueues.UserVerification);
-            builder.Services.AddMessageConsumer<OnboardingReminderMessageConsumer>(MessageQueues.OnboardingReminder);
+                x.UsingRabbitMq((context, cfg) =>
+                {
+                    cfg.Host(builder.Configuration["RabbitMQ:HostName"] ?? "localhost", "/", h =>
+                    {
+                        h.Username(builder.Configuration["RabbitMQ:UserName"] ?? "guest");
+                        h.Password(builder.Configuration["RabbitMQ:Password"] ?? "guest");
+                    });
+
+                    cfg.ConfigureEndpoints(context);
+                });
+            });
 
             var app = builder.Build();
 

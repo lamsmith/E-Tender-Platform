@@ -1,43 +1,44 @@
-using MediatR;
+using MassTransit;
 using Microsoft.Extensions.Logging;
-using UserService.Infrastructure.MessageBrokers;
 using SharedLibrary.Models.Messages;
-using UserService.Application.Features.Commands;
+using UserService.Application.Common.Interface.Services;
+using UserService.Application.DTO.Requests;
+
 namespace UserService.Infrastructure.MessageConsumers
 {
-    public class UserCreatedConsumer : IMessageConsumer<CreateUserMessage>
+    public class UserCreatedConsumer : IConsumer<CreateUserMessage>
     {
-        private readonly IMediator _mediator;
+        private readonly IUserService _userService;
         private readonly ILogger<UserCreatedConsumer> _logger;
 
         public UserCreatedConsumer(
-            IMediator mediator,
+            IUserService userService,
             ILogger<UserCreatedConsumer> logger)
         {
-            _mediator = mediator;
+            _userService = userService;
             _logger = logger;
         }
 
-        public async Task ConsumeAsync(CreateUserMessage message)
+        public async Task Consume(ConsumeContext<CreateUserMessage> context)
         {
             try
             {
+                var message = context.Message;
                 _logger.LogInformation("Creating user profile for {UserId}", message.UserId);
 
-                var command = new CreateUserCommand
+                var profileRequest = new CompleteProfileRequest
                 {
-                    UserId = message.UserId,
-                    Email = message.Email,
-                    CreatedAt = message.CreatedAt
+                    FirstName = message.FirstName,
+                    LastName = message.LastName
                 };
 
-                await _mediator.Send(command);
+                await _userService.CompleteProfileAsync(message.UserId, profileRequest);
 
                 _logger.LogInformation("User profile created successfully for {UserId}", message.UserId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating user profile for {UserId}", message.UserId);
+                _logger.LogError(ex, "Error creating user profile for {UserId}", context.Message.UserId);
                 throw;
             }
         }
