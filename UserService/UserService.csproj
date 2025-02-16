@@ -27,7 +27,7 @@
 
   <ItemGroup>
     <Folder Include="Application\DTO\Responses\" />
-    <Folder Include="Infrastructure\Messaging\" />
+    <Folder Include="Infrastructure\Persistence\Migrations\" />
     <Folder Include="WebAPI\Controllers\" />
   </ItemGroup>
 

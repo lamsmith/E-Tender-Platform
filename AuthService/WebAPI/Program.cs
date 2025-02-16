@@ -1,18 +1,18 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using AuthService.Infrastructure.JWT;
-using AuthService.Infrastructure.Services;
-using AuthService.Infrastructure.Repositories;
-using AuthService.Application.Common.Interface.Services;
 using AuthService.Application.Common.Interface.Repositories;
-using AuthService.Infrastructure.Persistence.Context;
-using Microsoft.EntityFrameworkCore;
+using AuthService.Application.Common.Interface.Services;
 using AuthService.Infrastructure.ExternalServices;
-using SharedLibrary.MessageBroker;
-using Serilog;
+using AuthService.Infrastructure.JWT;
+using AuthService.Infrastructure.Persistence.Context;
 using AuthService.Infrastructure.Persistence.Seeds;
+using AuthService.Infrastructure.Repositories;
+using AuthService.Infrastructure.Services;
 using MassTransit;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Serilog;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +30,36 @@ builder.Host.UseSerilog();
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+// Configure Swagger with JWT authentication
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth Service", Version = "v1" });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "Enter 'Bearer {token}'",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 
 // Configure JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -70,10 +99,6 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register Services
-builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Register Infrastructure Services
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenGenerator>();
 builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>();
@@ -96,7 +121,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Add this section for database migration and seeding
+// Update this section for database migration and seeding
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -104,8 +129,10 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<AuthDbContext>();
         var logger = services.GetRequiredService<ILogger<AuthDbContextSeed>>();
+        var seeder = new AuthDbContextSeed(logger);
+
         await context.Database.MigrateAsync();
-        await AuthDbContextSeed.SeedAsync(context, logger);
+        await seeder.SeedAsync(context);
     }
     catch (Exception ex)
     {

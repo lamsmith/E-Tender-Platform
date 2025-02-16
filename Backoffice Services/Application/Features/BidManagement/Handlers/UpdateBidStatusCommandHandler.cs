@@ -3,6 +3,7 @@ using Backoffice_Services.Infrastructure.ExternalServices;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MassTransit;
+using SharedLibrary.Models.Messages.BidEvents;
 
 namespace Backoffice_Services.Application.Features.BidManagement.Handlers
 {
@@ -26,17 +27,19 @@ namespace Backoffice_Services.Application.Features.BidManagement.Handlers
         {
             try
             {
-                var result = await _bidServiceClient.UpdateBidStatusAsync(request.BidId, request.Status, request.Notes);
+                var result = await _bidServiceClient.UpdateBidStatusAsync(
+                    request.BidId,
+                    request.Status,  
+                    request.Notes);
 
                 if (result)
                 {
                     await _publishEndpoint.Publish(new BidStatusUpdatedMessage
                     {
-                        Type = "BidStatusUpdated",
                         BidId = request.BidId,
-                        NewStatus = request.Status,
-                        Notes = request.Notes,
-                        Timestamp = DateTime.UtcNow
+                        NewStatus = request.Status.ToString(),  // Convert enum to string
+                        UpdatedByUserId = request.UpdatedByUserId,
+                        UpdatedAt = DateTime.UtcNow
                     }, cancellationToken);
                 }
 

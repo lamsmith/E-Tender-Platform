@@ -6,15 +6,9 @@ using AuthService.Domain.Entities;
 using AuthService.Domain.Enums;
 using AuthService.Infrastructure.ExternalServices;
 using AuthService.Infrastructure.JWT;
-using SharedLibrary.Constants;
-using SharedLibrary.MessageBroker;
-using SharedLibrary.Models.Messages;
-using System.Security.Cryptography;
-using System.Text;
-using Microsoft.Extensions.Logging;
-using System.Security.Claims;
-using SharedLibrary.Enums;
 using MassTransit;
+using SharedLibrary.Enums;
+using SharedLibrary.Models.Messages;
 
 namespace AuthService.Infrastructure.Services
 {

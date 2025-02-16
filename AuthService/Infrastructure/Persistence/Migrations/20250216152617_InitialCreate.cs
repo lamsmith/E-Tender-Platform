@@ -1,10 +1,14 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
 
 namespace AuthService.Infrastructure.Persistence.Migrations
 {
+    /// <inheritdoc />
     public partial class InitialCreate : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -12,18 +16,21 @@ namespace AuthService.Infrastructure.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Email = table.Column<string>(type: "text", nullable: false),
+                    Email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     PasswordHash = table.Column<string>(type: "text", nullable: false),
-                    Role = table.Column<int>(type: "integer", nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    Role = table.Column<string>(type: "text", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     RequirePasswordChange = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     LastLoginAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     LastPasswordChangeAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    RefreshToken = table.Column<string>(type: "text", nullable: true),
+                    RefreshToken = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     RefreshTokenExpiryTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false),
-                    Status = table.Column<int>(type: "integer", nullable: false)
+                    EmailConfirmed = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -37,6 +44,7 @@ namespace AuthService.Infrastructure.Persistence.Migrations
                 unique: true);
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

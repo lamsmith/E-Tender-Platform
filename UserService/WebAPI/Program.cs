@@ -23,7 +23,7 @@ using UserService.Infrastructure.Persistence.Seeds;
 
 public class Program
 {
-    public static async Task Main(string[] args) 
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -75,7 +75,7 @@ public class Program
         });
 
 
-        
+
 
         builder.Services.AddHttpContextAccessor();
 
@@ -117,9 +117,10 @@ public class Program
             {
                 var context = services.GetRequiredService<UserDbContext>();
                 var logger = services.GetRequiredService<ILogger<UserDbContextSeed>>();
+                var seeder = new UserDbContextSeed(logger);
 
-                await context.Database.MigrateAsync(); // ? Fixed: Now runs asynchronously
-                await UserDbContextSeed.SeedAsync(context, logger); // ? Fixed: Now runs asynchronously
+                await context.Database.MigrateAsync();
+                await seeder.SeedAsync(context);
             }
             catch (Exception ex)
             {

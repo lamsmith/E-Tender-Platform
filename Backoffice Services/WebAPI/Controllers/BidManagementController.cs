@@ -2,10 +2,10 @@ using Backoffice_Services.Application.DTO.BidManagement.Common;
 using Backoffice_Services.Application.DTO.BidManagement.Requests;
 using Backoffice_Services.Application.Features.BidManagement.Commands;
 using Backoffice_Services.Application.Features.BidManagement.Queries;
+using Backoffice_Services.Domain.Paging;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RFQService.Domain.Paging;
 
 namespace Backoffice_Services.WebAPI.Controllers
 {

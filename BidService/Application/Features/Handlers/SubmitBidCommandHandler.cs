@@ -38,7 +38,10 @@ namespace BidService.Application.Features.Handlers
                     BidId = createdBid.Id,
                     UserId = createdBid.UserId,
                     RfqId = createdBid.RFQId,
-                    TotalAmount = createdBid.CostOfProduct + createdBid.CostOfShipping - createdBid.Discount,
+                    Proposal = createdBid.Proposal,
+                    CostOfProduct = createdBid.CostOfProduct,
+                    CostOfShipping = createdBid.CostOfShipping,
+                    Discount = createdBid.Discount,                        
                     SubmittedAt = DateTime.UtcNow
                 }, cancellationToken);
 

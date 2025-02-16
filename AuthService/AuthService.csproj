@@ -37,8 +37,8 @@
     <Folder Include="Application\DTO\Requests\" />
     <Folder Include="Application\DTO\Responses\" />
     <Folder Include="Infrastructure\JWT\" />
-    <Folder Include="Infrastructure\Persistence\Context\" />
     <Folder Include="Infrastructure\Persistence\Configurations\" />
+    <Folder Include="Infrastructure\Persistence\Migrations\" />
     <Folder Include="Infrastructure\Repositories\" />
     <Folder Include="WebAPI\Controllers\" />
   </ItemGroup>

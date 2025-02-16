@@ -5,7 +5,7 @@ using Backoffice_Services.Application.Features.RFQManagement.Commands;
 using Backoffice_Services.Application.Features.RFQManagement.Queries;
 using Backoffice_Services.Application.DTO.RFQManagement.Requests;
 using Backoffice_Services.Application.DTO.RFQManagement.Responses;
-using RFQService.Domain.Paging;
+using Backoffice_Services.Domain.Paging;
 
 namespace Backoffice_Services.WebAPI.Controllers
 {

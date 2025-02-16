@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using UserService.Domain.Entities;
 using UserService.Infrastructure.Persistence.Context;
@@ -7,39 +6,70 @@ namespace UserService.Infrastructure.Persistence.Seeds
 {
     public class UserDbContextSeed
     {
-        public static async Task SeedAsync(UserDbContext context, ILogger<UserDbContextSeed> logger)
+        private readonly ILogger<UserDbContextSeed> _logger;
+
+        public UserDbContextSeed(ILogger<UserDbContextSeed> logger)
+        {
+            _logger = logger;
+        }
+
+        public async Task SeedAsync(UserDbContext context)
         {
             try
             {
-                if (!await context.Users.AnyAsync())
+                // Only seed if no users exist
+                if (!context.Users.Any())
                 {
-                    var userId = Guid.NewGuid();
-                    var user = new User
+                    _logger.LogInformation("Starting to seed the database.");
+
+                    var users = new List<User>
                     {
-                        Id = Guid.NewGuid(),
-                        Email = "admin@etender.com",
-                        UserId = userId,
-                        Profile = new Profile
+                        new User
                         {
-                            Id = Guid.NewGuid(),
-                            UserId = userId,
-                            FirstName = "Admin",
-                            LastName = "User",
-                            CompanyName = "E-Tender Platform",
-                            PhoneNumber = "+1234567890",
-                            Address = "Admin Address",
-                            Industry = "Technology"
+                            Id = Guid.Parse("7d9b7113-a8f8-4035-99a7-a20dd400f6a3"),
+                            Email = "admin@example.com",
+                            CreatedAt = DateTime.UtcNow,
+                            Profile = new Profile
+                            {
+                                FirstName = "System",
+                                LastName = "Admin",
+                                CreatedAt = DateTime.UtcNow
+                            }
+                        },
+                        new User
+                        {
+                            Id = Guid.Parse("2a6b8d68-c1f5-4b47-a8c5-6d6bfa4ef67b"),
+                            Email = "vendor@example.com",
+                            CreatedAt = DateTime.UtcNow,
+                            Profile = new Profile
+                            {
+                                FirstName = "Test",
+                                LastName = "Vendor",
+                                CompanyName = "Test Company Ltd",
+                                PhoneNumber = "1234567890",
+                                CompanyAddress = "123 Test Street",
+                                RcNumber = "RC123456",
+                                State = "Test State",
+                                City = "Test City",
+                                Industry = "Technology",
+                                CreatedAt = DateTime.UtcNow
+                            }
                         }
                     };
 
-                    await context.Users.AddAsync(user);
+                    await context.Users.AddRangeAsync(users);
                     await context.SaveChangesAsync();
-                    logger.LogInformation("Seed data added successfully.");
+
+                    _logger.LogInformation("Finished seeding the database.");
+                }
+                else
+                {
+                    _logger.LogInformation("Database already contains data - skipping seeding.");
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred while seeding the database.");
+                _logger.LogError(ex, "An error occurred while seeding the database.");
                 throw;
             }
         }

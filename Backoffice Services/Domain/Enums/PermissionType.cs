@@ -2,11 +2,10 @@
 {
     public enum PermissionType
     {
-        None = 0,
-        RfqManagement = 1,
-        BidManagement = 2,
-        UserManagement = 3,
-        KycReview = 4,
-        SystemConfiguration = 5
+        RfqManagement ,
+        BidManagement ,
+        UserManagement ,
+        KycReview ,
+        SystemConfiguration  
     }
 }

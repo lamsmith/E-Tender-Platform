@@ -1,31 +1,45 @@
-using SharedLibrary.MessageBroker;
-using SharedLibrary.Models.Messages;
-using SharedLibrary.Constants;
+using MassTransit;
+using SharedLibrary.Models.Messages.BidEvents;
+using Microsoft.Extensions.Logging;
 
 namespace BidService.Infrastructure.Messaging
 {
     public class BidMessagePublisher
     {
-        private readonly IMessagePublisher _messagePublisher;
+        private readonly IPublishEndpoint _publishEndpoint;
+        private readonly ILogger<BidMessagePublisher> _logger;
 
-        public BidMessagePublisher(IMessagePublisher messagePublisher)
+        public BidMessagePublisher(
+            IPublishEndpoint publishEndpoint,
+            ILogger<BidMessagePublisher> logger)
         {
-            _messagePublisher = messagePublisher;
+            _publishEndpoint = publishEndpoint;
+            _logger = logger;
         }
 
-        public void PublishBidPlaced(string bidId, string userId, string rfqId, decimal amount)
+        public async Task PublishBidPlacedAsync(Guid bidId, Guid userId, Guid rfqId, decimal CostOfProduct, decimal CostOfShipping, decimal Discount)
         {
-            var message = new BidPlacedMessage
+            try
             {
-                BidId = bidId,
-                UserId = userId,
-                RfqId = rfqId,
-                Amount = amount,
-                PlacedAt = DateTime.UtcNow
-            };
+                var message = new BidSubmittedMessage
+                {
+                    BidId = bidId,
+                    UserId = userId,
+                    RfqId = rfqId,
+                    CostOfProduct = CostOfProduct,
+                    CostOfShipping = CostOfShipping,
+                    Discount = Discount,
+                    SubmittedAt = DateTime.UtcNow
+                };
 
-            _messagePublisher.PublishMessage(MessageQueues.BidPlaced, message);
-            _messagePublisher.PublishMessage(MessageQueues.Notifications, message);
+                await _publishEndpoint.Publish(message);
+                _logger.LogInformation("Published bid placed message for bid {BidId}", bidId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error publishing bid placed message for bid {BidId}", bidId);
+                throw;
+            }
         }
     }
 }

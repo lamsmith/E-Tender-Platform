@@ -4,6 +4,7 @@ using Backoffice_Services.Infrastructure.ExternalServices;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MassTransit;
+using SharedLibrary.Models.Messages.BidEvents;
 
 namespace Backoffice_Services.Application.Features.BidManagement.Handlers
 {
@@ -29,14 +30,34 @@ namespace Backoffice_Services.Application.Features.BidManagement.Handlers
             {
                 var bid = await _bidServiceClient.SubmitBidAsync(request);
 
-                // Publish notification for bid submission
                 await _publishEndpoint.Publish(new BidSubmittedMessage
                 {
-                    Type = "BidSubmitted",
                     BidId = bid.Id,
-                    RfqId = bid.RfqId,
-                    UserId = bid.UserId,
-                    Timestamp = DateTime.UtcNow
+                    RfqId = request.RfqId,
+                    UserId = request.UserId,
+                    Proposal = request.Proposal,
+                    CostOfProduct = request.CostOfProduct,
+                    CostOfShipping = request.CostOfShipping,
+                    Discount = request.Discount,
+                    CompanyProfile = request.CompanyProfile != null ? new BidFile
+                    {
+                        Name = request.CompanyProfile.Name,
+                        ContentType = request.CompanyProfile.ContentType,
+                        FileUrl = request.CompanyProfile.FileUrl
+                    } : null,
+                    ProjectPlan = request.ProjectPlan != null ? new BidFile
+                    {
+                        Name = request.ProjectPlan.Name,
+                        ContentType = request.ProjectPlan.ContentType,
+                        FileUrl = request.ProjectPlan.FileUrl
+                    } : null,
+                    ProposalFile = request.ProposalFile != null ? new BidFile
+                    {
+                        Name = request.ProposalFile.Name,
+                        ContentType = request.ProposalFile.ContentType,
+                        FileUrl = request.ProposalFile.FileUrl
+                    } : null,
+                    SubmittedAt = DateTime.UtcNow
                 }, cancellationToken);
 
                 return bid;

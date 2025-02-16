@@ -7,7 +7,8 @@ namespace UserService.Domain.Entities
     {
         public string Email { get; set; }
         public Guid UserId { get; set; }
-        public Profile Profile { get; set; }
-        
+
+        // Change this to virtual for lazy loading
+        public virtual Profile? Profile { get; set; }
     }
 }

@@ -1,16 +1,13 @@
+using MassTransit;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SharedLibrary.Models.Messages;
 using UserService.Application.Common.Interface.Services;
 using UserService.Application.DTO.Requests;
 using UserService.Domain.Entities;
-using UserService.Infrastructure.Cache;
-using Microsoft.Extensions.Logging;
-using SharedLibrary.Constants;
-using SharedLibrary.Models.Messages;
-using SharedLibrary.MessageBroker;
-using MassTransit;
-using MediatR;
 using UserService.Domain.Paging;
+using UserService.Infrastructure.Cache;
 
 namespace UserService.WebAPI.Controllers
 {
