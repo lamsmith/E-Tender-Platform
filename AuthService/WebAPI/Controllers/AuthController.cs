@@ -4,7 +4,7 @@ using AuthService.Application.Common.Interface.Services;
 using AuthService.Application.DTO.Requests;
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
-using MediatR;
+
 using AuthService.Domain.Enums;
 
 namespace AuthService.WebAPI.Controllers
@@ -14,16 +14,13 @@ namespace AuthService.WebAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly IMediator _mediator;
         private readonly ILogger<AuthController> _logger;
 
         public AuthController(
             IAuthService authService,
-            IMediator mediator,
             ILogger<AuthController> logger)
         {
             _authService = authService;
-            _mediator = mediator;
             _logger = logger;
         }
 

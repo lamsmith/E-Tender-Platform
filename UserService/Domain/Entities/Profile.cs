@@ -16,8 +16,6 @@ namespace UserService.Domain.Entities
         public string Industry { get; set; }
         public Guid? CompanyLogoId { get; set; }
         public virtual CompanyLogo? CompanyLogo { get; set; }
-
-        // Change this to virtual and make it the inverse navigation
         public virtual User User { get; set; }
     }
 }

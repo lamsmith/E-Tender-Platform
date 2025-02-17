@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using System.Net.Http;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -101,18 +102,36 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
 // Register Services
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenGenerator>();
-builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>();
+
+// Register the HttpClient for UserService with certificate validation bypass
+builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>(client =>
+{
+    var handler = new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    };
+    client = new HttpClient(handler)
+    {
+        BaseAddress = new Uri(builder.Configuration["ExternalServices:UserService:BaseUrl"])
+    };
+});
 
 // Register Application Services
 builder.Services.AddScoped<IAuthService, AuthServiceImpl>();
 
 var app = builder.Build();
 
+// Ensure static files are served (Required for Swagger UI)
+app.UseStaticFiles();
+
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.RoutePrefix = "swagger"; 
+    });
 }
 
 app.UseHttpsRedirection();
@@ -141,6 +160,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// Map Controllers
 app.MapControllers();
 
 app.Run();

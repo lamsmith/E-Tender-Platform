@@ -1,25 +1,16 @@
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.StackExchangeRedis;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using StackExchange.Redis;
 using System.Text;
 using UserService.Application.Common.Interface.Repositories;
 using UserService.Application.Common.Interface.Services;
+using UserService.Infrastructure.Cache;
+using UserService.Infrastructure.MessageConsumers;
 using UserService.Infrastructure.Persistence.Context;
+using UserService.Infrastructure.Persistence.Seeds;
 using UserService.Infrastructure.Repositories;
 using UserService.Infrastructure.Services;
-using SharedLibrary.MessageBroker;
-using UserService.Infrastructure.Messaging;
-using UserService.Infrastructure.Cache;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using UserService.Infrastructure.MessageConsumers;
-using Microsoft.Extensions.Logging;
-using UserService.Infrastructure.Persistence.Seeds;
 
 public class Program
 {
@@ -69,6 +60,7 @@ public class Program
                     h.Password(builder.Configuration["RabbitMQ:Password"] ?? "guest");
                 });
 
+
                 // Configure endpoints
                 cfg.ConfigureEndpoints(context);
             });
@@ -109,7 +101,7 @@ public class Program
         app.UseAuthorization();
         app.MapControllers();
 
-        // ? Ensure database migration and seeding runs asynchronously
+        // database migration and seeding runs asynchronously
         using (var scope = app.Services.CreateScope())
         {
             var services = scope.ServiceProvider;
@@ -129,6 +121,6 @@ public class Program
             }
         }
 
-        await app.RunAsync(); // ? Use RunAsync() instead of Run()
+        await app.RunAsync(); 
     }
 }

@@ -6,7 +6,7 @@ namespace AuthService.Infrastructure.ExternalServices
     public interface IUserServiceClient
     {
         Task<string> GetUserRoleAsync(Guid userId);
-        Task<UserDetailsDto> GetUserDetailsAsync(Guid userId);
+        Task<UserDetailsDto> GetUserNamesAsync(Guid userId);
     }
 
     public class UserServiceClient : IUserServiceClient
@@ -33,9 +33,9 @@ namespace AuthService.Infrastructure.ExternalServices
             return role ?? "User";
         }
 
-        public async Task<UserDetailsDto> GetUserDetailsAsync(Guid userId)
+        public async Task<UserDetailsDto> GetUserNamesAsync(Guid userId)
         {
-            var response = await _httpClient.GetAsync($"/api/users/{userId}");
+            var response = await _httpClient.GetAsync($"/api/users/{userId}/names");
             if (!response.IsSuccessStatusCode)
             {
                 throw new Exception("Failed to fetch user details from UserService");

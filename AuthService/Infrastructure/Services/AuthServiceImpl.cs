@@ -68,7 +68,7 @@ namespace AuthService.Infrastructure.Services
                     FirstName = request.FirstName,
                     LastName = request.LastName,
                     CreatedAt = DateTime.UtcNow
- 
+
                 };
 
                 await _publishEndpoint.Publish(createUserMessage);
@@ -222,7 +222,7 @@ namespace AuthService.Infrastructure.Services
                     throw new Exception("Invalid email or password");
                 }
 
-                var userDetails = await _userServiceClient.GetUserDetailsAsync(user.Id);
+                var userDetails = await _userServiceClient.GetUserNamesAsync(user.Id);
                 if (!userDetails.IsActive)
                 {
                     _logger.LogWarning("Login attempt for inactive account: {Email}", request.Email);

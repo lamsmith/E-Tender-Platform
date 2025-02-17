@@ -8,6 +8,7 @@ namespace UserService.Application.Common.Interface.Repositories
         Task<PaginatedList<User>> GetAllAsync(PageRequest pageRequest, bool usePaging = true);
         bool IsExitByEmail(string email);
         Task<User?> GetByIdAsync(Guid id);
+        Task<(string FirstName, string LastName)?> GetUserNamesByIdAsync(Guid userId);
         Task AddAsync(User user);
         Task UpdateAsync(User user);
         Task DeleteAsync(Guid id);

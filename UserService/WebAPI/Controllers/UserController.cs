@@ -102,7 +102,7 @@ namespace UserService.WebAPI.Controllers
 
         [HttpGet("incomplete-profiles")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetIncompleteProfiles( [FromQuery] PageRequest pageRequest)
+        public async Task<IActionResult> GetIncompleteProfiles([FromQuery] PageRequest pageRequest)
         {
             try
             {
@@ -113,6 +113,32 @@ namespace UserService.WebAPI.Controllers
             {
                 _logger.LogError(ex, "Error retrieving incomplete profiles");
                 return StatusCode(500, new { message = "Error retrieving incomplete profiles" });
+            }
+        }
+
+        [HttpGet("{userId}/names")]
+        public async Task<IActionResult> GetUserNames(Guid userId)
+        {
+            try
+            {
+                var user = await _userService.GetUserNamesByIdAsync(userId);
+                if (user == null)
+                {
+                    return NotFound($"User with ID {userId} not found");
+                }
+
+                return Ok(new
+                {
+                    FirstName = user.Value.FirstName,
+                    LastName = user.Value.LastName,
+                    IsActive = true,
+                    Role = "MSME" // You might want to get this from your user entity
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting user names for ID: {UserId}", userId);
+                return StatusCode(500, "An error occurred while retrieving user names");
             }
         }
     }

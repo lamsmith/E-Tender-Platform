@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using UserService.Application.Common.Interface.Repositories;
 using UserService.Domain.Entities;
 using UserService.Domain.Paging;
@@ -87,6 +88,16 @@ namespace UserService.Infrastructure.Repositories
         public async Task<User> GetByEmailAsync(string email)
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+        }
+
+        public async Task<(string FirstName, string LastName)?> GetUserNamesByIdAsync(Guid userId)
+        {
+            var result = await _context.Users
+                .Where(u => u.Id == userId)
+                .Select(u => new { u.Profile.FirstName, u.Profile.LastName })
+                .FirstOrDefaultAsync();
+
+            return result == null ? null : (result.FirstName, result.LastName);
         }
 
         public async Task<User?> GetByIdAsync(Guid id)

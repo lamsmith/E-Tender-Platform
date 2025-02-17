@@ -12,5 +12,6 @@ namespace UserService.Application.Common.Interface.Services
         Task<int> GetUserCountAsync();
         Task<User> SubmitKycAsync(Guid userId, KycSubmissionRequest request);
         Task<PaginatedList<User>> GetIncompleteProfilesAsync(PageRequest pageRequest);
+        Task<(string FirstName, string LastName)?> GetUserNamesByIdAsync(Guid userId);
     }
 }

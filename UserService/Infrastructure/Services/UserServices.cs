@@ -91,5 +91,11 @@ namespace UserService.Infrastructure.Services
         {
             return await _userRepository.GetIncompleteProfilesAsync(pageRequest);
         }
+
+        public async Task<(string FirstName, string LastName)?> GetUserNamesByIdAsync(Guid userId)
+        {
+
+            return await _userRepository.GetUserNamesByIdAsync(userId);
+        }
     }
 }
