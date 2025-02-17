@@ -17,5 +17,7 @@ namespace AuthService.Application.DTO.Responses
         public string Email { get; set; }
         public string Role { get; set; }
         public AccountStatus AccountStatus { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
     }
 }

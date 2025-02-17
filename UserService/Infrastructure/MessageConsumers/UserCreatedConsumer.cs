@@ -24,21 +24,23 @@ namespace UserService.Infrastructure.MessageConsumers
             try
             {
                 var message = context.Message;
-                _logger.LogInformation("Creating user profile for {UserId}", message.UserId);
+                _logger.LogInformation("Received CreateUserMessage for user {UserId} with email {Email}",
+                    message.UserId, message.Email);
 
-                var profileRequest = new CompleteProfileRequest
+                var request = new CompleteProfileRequest
                 {
+                    Email = message.Email,
                     FirstName = message.FirstName,
                     LastName = message.LastName
                 };
 
-                await _userService.CompleteProfileAsync(message.UserId, profileRequest);
+                await _userService.CompleteProfileAsync(message.UserId, request);
 
-                _logger.LogInformation("User profile created successfully for {UserId}", message.UserId);
+                _logger.LogInformation("Successfully processed CreateUserMessage for user {UserId}", message.UserId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating user profile for {UserId}", context.Message.UserId);
+                _logger.LogError(ex, "Error processing CreateUserMessage");
                 throw;
             }
         }

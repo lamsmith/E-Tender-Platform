@@ -1,8 +1,6 @@
 using MassTransit;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using Serilog;
 using UserService.Application.Common.Interface.Repositories;
 using UserService.Application.Common.Interface.Services;
 using UserService.Infrastructure.Cache;
@@ -18,38 +16,34 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        // Configure Serilog
+        builder.Host.UseSerilog((context, services, configuration) => configuration
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services)
+            .WriteTo.Console()
+            .WriteTo.File("Logs/user_service_.log",
+                rollingInterval: RollingInterval.Day,
+                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"));
+
+        // Add services to the container.
         builder.Services.AddDbContext<UserDbContext>(options =>
             options.UseNpgsql(builder.Configuration.GetConnectionString("sqlConnection")));
 
-        // Add services to the container.
+        // Register Services
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IUserService, UserServices>();
 
-        // JWT Authentication
-        builder.Services.AddAuthentication(options =>
+        // Add Redis Cache
+        builder.Services.AddStackExchangeRedisCache(options =>
         {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
-        .AddJwtBearer(options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                ValidAudience = builder.Configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-            };
-            options.MapInboundClaims = false;
+            options.Configuration = builder.Configuration.GetConnectionString("Redis");
+            options.InstanceName = "UserService_";
         });
+        builder.Services.AddScoped<ICacheService, RedisCacheService>();
 
         // Configure MassTransit
         builder.Services.AddMassTransit(x =>
         {
-            // Add consumers
             x.AddConsumer<UserCreatedConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
@@ -60,28 +54,11 @@ public class Program
                     h.Password(builder.Configuration["RabbitMQ:Password"] ?? "guest");
                 });
 
+                cfg.UseJsonSerializer();
 
-                // Configure endpoints
                 cfg.ConfigureEndpoints(context);
             });
         });
-
-
-
-
-        builder.Services.AddHttpContextAccessor();
-
-        // Redis Caching
-        builder.Services.AddStackExchangeRedisCache(options =>
-        {
-            options.Configuration = builder.Configuration.GetConnectionString("Redis");
-        });
-
-        // Register cache service
-        builder.Services.AddScoped<ICacheService, RedisCacheService>();
-
-        // Register Message Consumer
-        builder.Services.AddScoped<UserCreatedConsumer>();
 
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
@@ -96,31 +73,36 @@ public class Program
             app.UseSwaggerUI();
         }
 
-        app.UseHttpsRedirection();
-        app.UseAuthentication();
-        app.UseAuthorization();
-        app.MapControllers();
-
-        // database migration and seeding runs asynchronously
+        // Ensure database migration and seeding
         using (var scope = app.Services.CreateScope())
         {
             var services = scope.ServiceProvider;
             try
             {
                 var context = services.GetRequiredService<UserDbContext>();
+
+                // First apply migrations
+                await context.Database.MigrateAsync();
+
+                // Then seed
                 var logger = services.GetRequiredService<ILogger<UserDbContextSeed>>();
                 var seeder = new UserDbContextSeed(logger);
-
-                await context.Database.MigrateAsync();
                 await seeder.SeedAsync(context);
+
+                logger.LogInformation("Database migration and seeding completed successfully.");
             }
             catch (Exception ex)
             {
                 var logger = services.GetRequiredService<ILogger<Program>>();
                 logger.LogError(ex, "An error occurred while migrating or seeding the database.");
+                throw; // This will stop the application if database setup fails
             }
         }
 
-        await app.RunAsync(); 
+        app.UseHttpsRedirection();
+        app.UseAuthorization();
+        app.MapControllers();
+
+        await app.RunAsync();
     }
 }

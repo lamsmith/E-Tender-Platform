@@ -12,7 +12,7 @@ namespace UserService.Infrastructure.Persistence.Configurations
 
                      builder.HasKey(p => p.Id);
 
-                     // Properties configuration
+                     // Required fields
                      builder.Property(p => p.FirstName)
                             .IsRequired()
                             .HasMaxLength(100);
@@ -21,26 +21,34 @@ namespace UserService.Infrastructure.Persistence.Configurations
                             .IsRequired()
                             .HasMaxLength(100);
 
+                     // Optional fields
                      builder.Property(p => p.CompanyName)
-                            .HasMaxLength(200);
+                            .HasMaxLength(200)
+                            .IsRequired(false);
 
                      builder.Property(p => p.PhoneNumber)
-                            .HasMaxLength(20);
-
-                     builder.Property(p => p.CompanyAddress)
-                            .HasMaxLength(500);
+                            .HasMaxLength(20)
+                            .IsRequired(false);
 
                      builder.Property(p => p.RcNumber)
-                            .HasMaxLength(50);
+                            .HasMaxLength(50)
+                            .IsRequired(false);
 
                      builder.Property(p => p.State)
-                            .HasMaxLength(100);
+                            .HasMaxLength(100)
+                            .IsRequired(false);
 
                      builder.Property(p => p.City)
-                            .HasMaxLength(100);
+                            .HasMaxLength(100)
+                            .IsRequired(false);
+
+                     builder.Property(p => p.CompanyAddress)
+                            .HasMaxLength(500)
+                            .IsRequired(false);
 
                      builder.Property(p => p.Industry)
-                            .HasMaxLength(100);
+                            .HasMaxLength(100)
+                            .IsRequired(false);
 
                      // Configure one-to-one relationship with CompanyLogo
                      builder.HasOne(p => p.CompanyLogo)

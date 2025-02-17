@@ -70,7 +70,7 @@ namespace UserService.WebAPI.Controllers
                 var userId = Guid.Parse(User.FindFirst("userId")?.Value);
                 var user = await _userService.SubmitKycAsync(userId, request);
 
-                // Publish KYC submission message for backoffice review
+                //  Kyc submission message for backoffice review
                 await _publishEndpoint.Publish(new KycSubmittedMessage
                 {
                     UserId = userId,
@@ -84,7 +84,7 @@ namespace UserService.WebAPI.Controllers
                     SubmittedAt = DateTime.UtcNow
                 });
 
-                // Invalidate cache
+
                 await _cacheService.RemoveAsync($"user_profile_{userId}");
 
                 return Ok(new
@@ -131,8 +131,8 @@ namespace UserService.WebAPI.Controllers
                 {
                     FirstName = user.Value.FirstName,
                     LastName = user.Value.LastName,
-                    IsActive = true,
-                    Role = "MSME" // You might want to get this from your user entity
+                    //IsActive = true,
+                    //Role = "MSME" 
                 });
             }
             catch (Exception ex)

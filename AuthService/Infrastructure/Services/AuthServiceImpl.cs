@@ -64,12 +64,14 @@ namespace AuthService.Infrastructure.Services
                 var createUserMessage = new CreateUserMessage
                 {
                     UserId = authUser.Id,
-                    Email = authUser.Email,
+                    Email = request.Email,
                     FirstName = request.FirstName,
                     LastName = request.LastName,
                     CreatedAt = DateTime.UtcNow
-
                 };
+
+                _logger.LogInformation("Publishing CreateUserMessage for user {UserId} with email {Email}",
+                    createUserMessage.UserId, createUserMessage.Email);
 
                 await _publishEndpoint.Publish(createUserMessage);
 
@@ -114,11 +116,14 @@ namespace AuthService.Infrastructure.Services
                 var createUserMessage = new CreateUserMessage
                 {
                     UserId = authUser.Id,
-                    Email = authUser.Email,
+                    Email = request.Email,
                     FirstName = request.FirstName,
                     LastName = request.LastName,
                     CreatedAt = DateTime.UtcNow
                 };
+
+                _logger.LogInformation("Publishing CreateUserMessage for user {UserId} with email {Email}",
+                    createUserMessage.UserId, createUserMessage.Email);
 
                 await _publishEndpoint.Publish(createUserMessage);
 
@@ -132,7 +137,7 @@ namespace AuthService.Infrastructure.Services
                 throw;
             }
         }
-        public async Task<(Guid UserId, string TempPassword)> CreateStaffUserAsync(string email, Role role)
+        public async Task<(Guid UserId, string TempPassword)> CreateStaffUserAsync(string email)
         {
             try
             {
@@ -145,7 +150,7 @@ namespace AuthService.Infrastructure.Services
                 {
                     Email = email,
                     PasswordHash = HashPassword(tempPassword),
-                    Role = role,
+                    Role = Role.Staff,
                     IsActive = true,
                     RequirePasswordChange = true,
                     CreatedAt = DateTime.UtcNow
@@ -222,14 +227,15 @@ namespace AuthService.Infrastructure.Services
                     throw new Exception("Invalid email or password");
                 }
 
-                var userDetails = await _userServiceClient.GetUserNamesAsync(user.Id);
-                if (!userDetails.IsActive)
-                {
-                    _logger.LogWarning("Login attempt for inactive account: {Email}", request.Email);
-                    throw new Exception("User account is inactive");
-                }
+                // Get user names from UserService
+                //var userNames = await _userServiceClient.GetUserNamesAsync(user.Id);
+                //if (userNames == null)
+                //{
+                //    _logger.LogWarning("Could not fetch user names for ID: {UserId}", user.Id);
+                //    throw new Exception("Could not fetch user details");
+                //}
 
-                var token = _jwtTokenService.GenerateToken(user.Id, user.Email, userDetails.Role);
+                var token = _jwtTokenService.GenerateToken(user.Id, user.Email, user.Role.ToString());
                 var refreshToken = _jwtTokenService.GenerateRefreshToken();
                 var expiresAt = _jwtTokenService.GetExpirationDate();
 
@@ -250,8 +256,10 @@ namespace AuthService.Infrastructure.Services
                     {
                         Id = user.Id,
                         Email = user.Email,
-                        Role = userDetails.Role,
-                        AccountStatus = user.Status
+                        Role = user.Role.ToString(),
+                        AccountStatus = user.Status,
+                        //FirstName = userNames.FirstName,
+                        //LastName = userNames.LastName
                     }
                 };
             }

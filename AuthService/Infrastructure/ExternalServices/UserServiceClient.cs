@@ -35,14 +35,24 @@ namespace AuthService.Infrastructure.ExternalServices
 
         public async Task<UserDetailsDto> GetUserNamesAsync(Guid userId)
         {
-            var response = await _httpClient.GetAsync($"/api/users/{userId}/names");
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception("Failed to fetch user details from UserService");
-            }
 
-            var userDetails = await response.Content.ReadFromJsonAsync<UserDetailsDto>();
-            return userDetails ?? throw new Exception("User details not found");
+            HttpResponseMessage? response;
+
+            try { 
+                response = await _httpClient.GetAsync($"/api/users/{userId}/names");
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception("Failed to fetch user details from UserService");
+                }
+
+                var userDetails = await response.Content.ReadFromJsonAsync<UserDetailsDto>();
+                return userDetails ?? throw new Exception("User details not found");
+            }
+            catch (Exception e)
+            {
+                Console.Write(e.Message);
+                throw;
+            }
         }
     }
 }

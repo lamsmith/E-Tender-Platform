@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using UserService.Domain.Entities;
 using UserService.Infrastructure.Persistence.Context;
+using Microsoft.EntityFrameworkCore;
 
 namespace UserService.Infrastructure.Persistence.Seeds
 {
@@ -17,7 +18,9 @@ namespace UserService.Infrastructure.Persistence.Seeds
         {
             try
             {
-                // Only seed if no users exist
+                // Ensure database is created and migrations are applied
+                await context.Database.MigrateAsync();
+
                 if (!context.Users.Any())
                 {
                     _logger.LogInformation("Starting to seed the database.");
@@ -27,18 +30,27 @@ namespace UserService.Infrastructure.Persistence.Seeds
                         new User
                         {
                             Id = Guid.Parse("7d9b7113-a8f8-4035-99a7-a20dd400f6a3"),
+                            UserId = Guid.Parse("7d9b7113-a8f8-4035-99a7-a20dd400f6a3"),
                             Email = "admin@example.com",
                             CreatedAt = DateTime.UtcNow,
                             Profile = new Profile
                             {
                                 FirstName = "System",
                                 LastName = "Admin",
+                                CompanyName = null,
+                                PhoneNumber = null,
+                                RcNumber = null,
+                                State = null,
+                                City = null,
+                                CompanyAddress = null,
+                                Industry = null,
                                 CreatedAt = DateTime.UtcNow
                             }
                         },
                         new User
                         {
                             Id = Guid.Parse("2a6b8d68-c1f5-4b47-a8c5-6d6bfa4ef67b"),
+                            UserId = Guid.Parse("2a6b8d68-c1f5-4b47-a8c5-6d6bfa4ef67b"),
                             Email = "vendor@example.com",
                             CreatedAt = DateTime.UtcNow,
                             Profile = new Profile
