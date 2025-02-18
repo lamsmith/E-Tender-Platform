@@ -1,0 +1,77 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/auth/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 55426
+        }
+      ],
+      "UpstreamPathTemplate": "/api/auth/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "SwaggerKey": "auth"
+    },
+
+
+    {
+      "DownstreamPathTemplate": "/api/users/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7216
+        }
+      ],
+      "UpstreamPathTemplate": "/api/users/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "users"
+    }
+    /*
+    ,
+    {
+      "DownstreamPathTemplate": "/api/rfq/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7218
+        }
+      ],
+      "UpstreamPathTemplate": "/api/rfq/{everything}",
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "rfq"
+    },
+    {
+      "DownstreamPathTemplate": "/api/bids/{everything}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7219
+        }
+      ],
+      "UpstreamPathTemplate": "/api/bids/{everything}",
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "SwaggerKey": "bids"
+    }
+    */
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "https://localhost:7000",
+    "RequestIdKey": "OcRequestId"
+  }
+}

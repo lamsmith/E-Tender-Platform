@@ -1,10 +1,13 @@
-using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore;
 using RabbitMQ.Client;
 using SharedLibrary.MessageBroker;
 using StackExchange.Redis;
 using RFQService.Infrastructure.Cache;
 using MassTransit;
 using RFQService.Infrastructure.MessageConsumers;
+using RFQService.Infrastructure.Persistence.Context;
+using RFQService.Infrastructure.Persistence.Repositories;
+using RFQService.Application.Common.Interface.Repositories;
 
 namespace RFQService.WebAPI
 {
@@ -14,7 +17,12 @@ namespace RFQService.WebAPI
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // Add DbContext
+            builder.Services.AddDbContext<RFQDbContext>(options =>
+                options.UseNpgsql(builder.Configuration.GetConnectionString("sqlConnection")));
+
+            // Register Repository
+            builder.Services.AddScoped<IRFQRepository, RFQRepository>();
 
             builder.Services.AddHttpContextAccessor();
 

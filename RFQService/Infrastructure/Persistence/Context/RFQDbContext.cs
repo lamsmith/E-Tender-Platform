@@ -12,7 +12,7 @@ namespace RFQService.Infrastructure.Persistence.Context
 
         public DbSet<RFQ> RFQs { get; set; }
         public DbSet<RFQDocument> RFQDocuments { get; set; }
-      
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedLibrary", "SharedLibr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthService", "AuthService\AuthService.csproj", "{82D9A21E-E343-401B-98B4-C2C1A6C6CD88}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApiGateway", "ApiGateway\WebAPI\ApiGateway.csproj", "{0CA89090-5FBA-4D95-9EDB-7849495A78C8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,10 @@ Global
 		{82D9A21E-E343-401B-98B4-C2C1A6C6CD88}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{82D9A21E-E343-401B-98B4-C2C1A6C6CD88}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{82D9A21E-E343-401B-98B4-C2C1A6C6CD88}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CA89090-5FBA-4D95-9EDB-7849495A78C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CA89090-5FBA-4D95-9EDB-7849495A78C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CA89090-5FBA-4D95-9EDB-7849495A78C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CA89090-5FBA-4D95-9EDB-7849495A78C8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

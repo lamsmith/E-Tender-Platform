@@ -54,8 +54,6 @@ public class Program
                     h.Password(builder.Configuration["RabbitMQ:Password"] ?? "guest");
                 });
 
-                cfg.UseJsonSerializer();
-
                 cfg.ConfigureEndpoints(context);
             });
         });
