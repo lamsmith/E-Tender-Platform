@@ -170,17 +170,6 @@ namespace AuthService.WebAPI.Controllers
             }
         }
 
-        //    [HttpPost("refresh-token")]
-        //    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
-        //    {
-        //        // TODO: Implement refresh token logic
-        //        throw new NotImplementedException();
-        //    }
-
-        //    public class RefreshTokenRequest
-        //    {
-        //        public string RefreshToken { get; set; }
-        //    }
 
         [HttpPut("{userId}/status")]
         [Authorize(Roles = "Admin,SuperAdmin")]

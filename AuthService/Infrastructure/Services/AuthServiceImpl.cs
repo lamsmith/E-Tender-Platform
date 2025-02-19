@@ -228,12 +228,12 @@ namespace AuthService.Infrastructure.Services
                 }
 
                 // Get user names from UserService
-                //var userNames = await _userServiceClient.GetUserNamesAsync(user.Id);
-                //if (userNames == null)
-                //{
-                //    _logger.LogWarning("Could not fetch user names for ID: {UserId}", user.Id);
-                //    throw new Exception("Could not fetch user details");
-                //}
+                var userNames = await _userServiceClient.GetUserNamesAsync(user.Id);
+                if (userNames == null)
+                {
+                    _logger.LogWarning("Could not fetch user names for ID: {UserId}", user.Id);
+                    throw new Exception("Could not fetch user details");
+                }
 
                 var token = _jwtTokenService.GenerateToken(user.Id, user.Email, user.Role.ToString());
                 var refreshToken = _jwtTokenService.GenerateRefreshToken();
@@ -258,8 +258,8 @@ namespace AuthService.Infrastructure.Services
                         Email = user.Email,
                         Role = user.Role.ToString(),
                         AccountStatus = user.Status,
-                        //FirstName = userNames.FirstName,
-                        //LastName = userNames.LastName
+                        FirstName = userNames.FirstName,
+                        LastName = userNames.LastName
                     }
                 };
             }
