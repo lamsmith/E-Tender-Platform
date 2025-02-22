@@ -1,5 +1,5 @@
 using MassTransit;
-using MediatR;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SharedLibrary.Models.Messages;
@@ -11,7 +11,7 @@ using UserService.Infrastructure.Cache;
 
 namespace UserService.WebAPI.Controllers
 {
-    [Authorize]
+   // [Authorize]
     [ApiController]
     [Route("api/users")]
     public class UserController : ControllerBase
@@ -20,20 +20,18 @@ namespace UserService.WebAPI.Controllers
         private readonly ICacheService _cacheService;
         private readonly ILogger<UserController> _logger;
         private readonly IPublishEndpoint _publishEndpoint;
-        private readonly IMediator _mediator;
 
         public UserController(
             IUserService userService,
             ICacheService cacheService,
             ILogger<UserController> logger,
-            IPublishEndpoint publishEndpoint,
-            IMediator mediator)
+            IPublishEndpoint publishEndpoint)
         {
             _userService = userService;
             _cacheService = cacheService;
             _logger = logger;
             _publishEndpoint = publishEndpoint;
-            _mediator = mediator;
+            
         }
 
         [HttpGet("profile")]

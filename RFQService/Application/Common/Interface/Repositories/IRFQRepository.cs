@@ -13,8 +13,6 @@ namespace RFQService.Application.Common.Interface.Repositories
         Task<PaginatedList<RFQ>> GetAllAsync(PageRequest pageRequest, bool usePaging = true);
         Task<IEnumerable<RFQ>> GetByVisibilityAsync(VisibilityType visibility);
         Task<int> CountByCreatorAsync(Guid creatorId);
-        Task AddDocumentAsync(RFQDocument document);
-
         Task<int> CountByStatusAsync(Status status);
        
 

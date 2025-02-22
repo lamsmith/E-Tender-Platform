@@ -9,11 +9,11 @@ using RFQService.Infrastructure.Persistence.Context;
 
 #nullable disable
 
-namespace RFQService.Migrations
+namespace RFQService.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(RFQDbContext))]
-    [Migration("20250217200546_InitialRFQMigration")]
-    partial class InitialRFQMigration
+    [Migration("20250221221420_RFQ")]
+    partial class RFQ
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -90,74 +90,25 @@ namespace RFQService.Migrations
                     b.ToTable("RFQs", (string)null);
                 });
 
-            modelBuilder.Entity("RFQService.Domain.Entities.RFQDocument", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("FileType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("FileUrl")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<Guid>("RFQId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RFQId");
-
-                    b.ToTable("RFQDocuments", (string)null);
-                });
-
             modelBuilder.Entity("RFQService.Domain.Entities.RFQRecipient", b =>
                 {
                     b.Property<Guid>("RFQId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("RFQId", "UserId");
 
+                    b.HasIndex("RFQId");
+
+                    b.HasIndex("UserId");
+
                     b.ToTable("RFQRecipients");
-                });
-
-            modelBuilder.Entity("RFQService.Domain.Entities.RFQDocument", b =>
-                {
-                    b.HasOne("RFQService.Domain.Entities.RFQ", "RFQ")
-                        .WithMany("Documents")
-                        .HasForeignKey("RFQId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("RFQ");
                 });
 
             modelBuilder.Entity("RFQService.Domain.Entities.RFQRecipient", b =>
@@ -173,8 +124,6 @@ namespace RFQService.Migrations
 
             modelBuilder.Entity("RFQService.Domain.Entities.RFQ", b =>
                 {
-                    b.Navigation("Documents");
-
                     b.Navigation("Recipients");
                 });
 #pragma warning restore 612, 618

@@ -5,16 +5,14 @@ namespace RFQService.Application.DTO.Requests
     public class RFQUpdateRequestModel
     {
         public string ContractTitle { get; set; }
-        public string Description { get; set; }
-        public string Category { get; set; }
-        public DateTime? SubmissionDeadline { get; set; }
-        public List<RFQDocumentRequest> Documents { get; set; }
-    }
-
-    public class RFQDocumentRequest
-    {
-        public string Name { get; set; }
-        public string ContentType { get; set; }
-        public string FileUrl { get; set; }
+        public string CompanyName { get; set; }
+        public string ScopeOfSupply { get; set; }
+        public string PaymentTerms { get; set; }
+        public string DeliveryTerms { get; set; }
+        public string OtherInformation { get; set; }
+        public Status Status { get; set; }
+        public DateTime Deadline { get; set; }
+        public VisibilityType Visibility { get; set; }
+        public List<string> RecipientEmails { get; set; } = new();
     }
 }

@@ -8,6 +8,8 @@ using RFQService.Domain.Entities;
 using RFQService.Domain.Paging;
 using Microsoft.Extensions.Logging;
 using RFQService.Application.DTO.Requests;
+using RFQService.Infrastructure.Authorization;
+using RFQService.Application.Extensions;
 
 namespace RFQService.WebAPI.Controllers
 {
@@ -30,22 +32,15 @@ namespace RFQService.WebAPI.Controllers
             _logger = logger;
         }
 
-        [HttpPost]
+        [HttpPost("createRFQ")]
+        [AuthorizeRoles("Corporate")]
         public async Task<IActionResult> Create([FromBody] RFQCreationRequestModel request)
         {
             try
             {
-                var command = new CreateRFQCommand { RFQData = request };
+                var command = request.ToCommand();
                 var result = await _mediator.Send(command);
-
-                // Invalidate cache
-                var userId = User.FindFirst("userId")?.Value;
-                if (!string.IsNullOrEmpty(userId))
-                {
-                    await _cacheService.RemoveAsync($"rfqs_user_{userId}");
-                }
-
-                return CreatedAtAction(nameof(GetById), new { id = result }, result);
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -55,6 +50,7 @@ namespace RFQService.WebAPI.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Policy = "RequireAuthenticatedUser")]
         public async Task<IActionResult> GetById(Guid id)
         {
             try
@@ -103,25 +99,13 @@ namespace RFQService.WebAPI.Controllers
         {
             try
             {
-                var command = new UpdateRFQCommand
-                {
-                    RFQId = id,
-                    UpdateData = request
-                };
+                var command = request.ToCommand(id);
                 var result = await _mediator.Send(command);
-
-                if (!result)
-                    return NotFound(new { message = "RFQ not found" });
-
-                // Invalidate cache
-                await _cacheService.RemoveAsync($"rfq_{id}");
-                var userId = User.FindFirst("userId")?.Value;
-                if (!string.IsNullOrEmpty(userId))
-                {
-                    await _cacheService.RemoveAsync($"rfqs_user_{userId}");
-                }
-
-                return Ok(new { message = "RFQ updated successfully" });
+                return result ? Ok() : NotFound();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
             }
             catch (Exception ex)
             {

@@ -18,6 +18,9 @@ namespace RFQService.Infrastructure.Persistence.Configurations
 
             builder.HasIndex(rr => rr.RFQId);
             builder.HasIndex(rr => rr.UserId);
+            builder.HasIndex(rr => rr.Email);
+
+
 
         }
     }

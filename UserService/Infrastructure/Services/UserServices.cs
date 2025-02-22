@@ -49,17 +49,18 @@ namespace UserService.Infrastructure.Services
                 var user = existingUser ?? new User();
 
                 // Update user properties
-                user.Id = userId;
+                user.Id = Guid.NewGuid();
                 user.UserId = userId;
                 user.Email = request.Email;  
                 user.CreatedAt = DateTime.UtcNow;
+                user.CreatedBy = userId;
 
                 // Create or update profile
-                user.Profile = new Profile
-                {
-                    UserId = userId,
-                    FirstName = request.FirstName,
-                    LastName = request.LastName,
+            user.Profile = new Profile
+            {
+                UserId = userId,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
                     CompanyName = null,
                     PhoneNumber = null,
                     CompanyAddress = null,
@@ -78,12 +79,12 @@ namespace UserService.Infrastructure.Services
                 else
                 {
                     _logger.LogInformation("Updating existing user with ID {UserId}", userId);
-                    await _userRepository.UpdateAsync(user);
+            await _userRepository.UpdateAsync(user);
                 }
 
                 _logger.LogInformation("Successfully completed profile for user {UserId}", userId);
-                return user;
-            }
+            return user;
+        }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error completing profile for user {UserId}", userId);

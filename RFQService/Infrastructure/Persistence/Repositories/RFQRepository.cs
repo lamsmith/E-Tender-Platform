@@ -56,7 +56,6 @@ namespace RFQService.Infrastructure.Persistence.Repositories
 
             // If not in cache, get from DB and cache it
             var rfq = await _context.RFQs
-                .Include(r => r.Documents)
                 .Include(r => r.Recipients)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
@@ -114,22 +113,11 @@ namespace RFQService.Infrastructure.Persistence.Repositories
             return await _context.RFQs.CountAsync(r => r.Status == status);
         }
 
-        public async Task AddDocumentAsync(RFQDocument document)
-        {
-            await _context.RFQDocuments.AddAsync(document);
-            await _context.SaveChangesAsync();
-        }
-
-
-
-
-
-
 
         public async Task CacheRFQAsync(RFQ rfq)
         {
             var cacheEntryOptions = new DistributedCacheEntryOptions()
-                .SetAbsoluteExpiration(TimeSpan.FromMinutes(30)); // Cache for 30 minutes, adjust as needed
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(30)); 
 
             var serializedRfq = JsonConvert.SerializeObject(rfq);
             await _cache.SetStringAsync($"rfq:{rfq.Id}", serializedRfq, cacheEntryOptions);

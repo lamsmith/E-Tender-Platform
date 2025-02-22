@@ -11,13 +11,13 @@ namespace RFQService.Infrastructure.Persistence.Context
         }
 
         public DbSet<RFQ> RFQs { get; set; }
-        public DbSet<RFQDocument> RFQDocuments { get; set; }
+        public DbSet<RFQRecipient> RFQRecipients { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new RFQConfiguration());
-            modelBuilder.ApplyConfiguration(new RFQDocumentConfiguration());
+            modelBuilder.ApplyConfiguration(new RFQRecipientConfiguration());
 
             // Apply configurations for other entities if necessary
             base.OnModelCreating(modelBuilder);

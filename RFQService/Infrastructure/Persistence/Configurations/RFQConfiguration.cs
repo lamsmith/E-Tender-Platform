@@ -44,11 +44,7 @@ namespace RFQService.Infrastructure.Persistence.Configurations
             builder.Property(r => r.CreatedByUserId)
                 .IsRequired();
 
-            // Relationships with RFQDocument
-            builder.HasMany(r => r.Documents)
-                .WithOne(d => d.RFQ)
-                .HasForeignKey(d => d.RFQId)
-                .OnDelete(DeleteBehavior.Cascade);
+        
 
 
             // Relationship with RFQRecipient

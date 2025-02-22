@@ -85,13 +85,7 @@ namespace Backoffice_Services.WebAPI.Controllers
                     OtherInformation = request.OtherInformation,
                     Deadline = request.Deadline,
                     Visibility = request.Visibility,
-                    CreatedByUserId = request.CreatedByUserId,
-                    Documents = request.Documents?.Select(doc => new RFQDocumentModel
-                    {
-                        FileName = doc.Name,
-                        FileType = doc.ContentType,
-                        FileUrl = doc.FileUrl
-                    }).ToList() ?? new List<RFQDocumentModel>()
+                    CreatedByUserId = request.CreatedByUserId
                 };
 
                 var result = await _mediator.Send(command);

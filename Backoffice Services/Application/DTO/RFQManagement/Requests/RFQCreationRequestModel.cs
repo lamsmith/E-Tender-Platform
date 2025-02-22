@@ -12,16 +12,9 @@ namespace Backoffice_Services.Application.DTO.RFQManagement.Requests
         public DateTime Deadline { get; set; }
         public VisibilityType Visibility { get; set; }
         public Guid CreatedByUserId { get; set; }
-        public List<DocumentUploadRequest> Documents { get; set; }
+
+        // New property for MSME recipient emails
+        public List<string> RecipientEmails { get; set; } = new();
     }
 
-
-    public class DocumentUploadRequest
-    {
-        public string Name { get; set; }
-        public string ContentType { get; set; }
-        public string FileUrl { get; set; }
-    }
-
-    
 }

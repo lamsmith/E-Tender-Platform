@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace RFQService.Migrations
+namespace RFQService.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialRFQMigration : Migration
+    public partial class RFQ : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,11 +17,11 @@ namespace RFQService.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ContractTitle = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    CompanyName = table.Column<string>(type: "text", nullable: false),
                     ScopeOfSupply = table.Column<string>(type: "character varying(10000)", maxLength: 10000, nullable: false),
                     PaymentTerms = table.Column<string>(type: "character varying(10000)", maxLength: 10000, nullable: false),
                     DeliveryTerms = table.Column<string>(type: "character varying(10000)", maxLength: 10000, nullable: false),
                     OtherInformation = table.Column<string>(type: "character varying(10000)", maxLength: 10000, nullable: false),
-                    CompanyName = table.Column<string>(type: "text", nullable: false),
                     Deadline = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
                     Visibility = table.Column<string>(type: "text", nullable: false),
@@ -37,37 +37,12 @@ namespace RFQService.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RFQDocuments",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    RFQId = table.Column<Guid>(type: "uuid", nullable: false),
-                    FileName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    FileType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    FileUrl = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
-                    UploadedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "text", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_RFQDocuments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_RFQDocuments_RFQs_RFQId",
-                        column: x => x.RFQId,
-                        principalTable: "RFQs",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "RFQRecipients",
                 columns: table => new
                 {
                     RFQId = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Email = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -81,17 +56,19 @@ namespace RFQService.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_RFQDocuments_RFQId",
-                table: "RFQDocuments",
+                name: "IX_RFQRecipients_RFQId",
+                table: "RFQRecipients",
                 column: "RFQId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RFQRecipients_UserId",
+                table: "RFQRecipients",
+                column: "UserId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "RFQDocuments");
-
             migrationBuilder.DropTable(
                 name: "RFQRecipients");
 

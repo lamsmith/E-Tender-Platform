@@ -2,6 +2,8 @@
 using RFQService.Application.DTO.Responses;
 using RFQService.Domain.Entities;
 using RFQService.Domain.Paging;
+using RFQService.Application.Features.Commands;
+using RFQService.Domain.Enums;
 
 namespace RFQService.Application.Extensions
 {
@@ -33,12 +35,7 @@ namespace RFQService.Application.Extensions
                 Visibility = request.Visibility,
                 CreatedByUserId = request.CreatedByUserId,
                 CreatedAt = DateTime.UtcNow,
-                Documents = request.Documents?.Select(doc => new RFQDocument
-                {
-                    FileName = doc.Name,
-                    FileType = doc.ContentType,
-                    FileUrl = doc.FileUrl
-                }).ToList() ?? new List<RFQDocument>()
+
             };
         }
 
@@ -57,36 +54,91 @@ namespace RFQService.Application.Extensions
                 Visibility = rfq.Visibility,
                 CreatedByUserId = rfq.CreatedByUserId,
                 CreatedAt = rfq.CreatedAt,
-                Documents = rfq.Documents.Select(d => new RFQDocumentResponseModel
+
+            };
+        }
+
+        // Mapping from RFQCreationRequestModel to CreateRFQCommand
+        public static CreateRFQCommand ToCommand(this RFQCreationRequestModel request)
+        {
+            return new CreateRFQCommand
+            {
+                ContractTitle = request.ContractTitle,
+                CompanyName = request.CompanyName,
+                ScopeOfSupply = request.ScopeOfSupply,
+                PaymentTerms = request.PaymentTerms,
+                DeliveryTerms = request.DeliveryTerms,
+                OtherInformation = request.OtherInformation,
+                Status = Status.Open,
+                Deadline = request.Deadline,
+                Visibility = request.Visibility,
+                RecipientEmails = request.RecipientEmails ?? new List<string>()
+            };
+        }
+
+        // Mapping from CreateRFQCommand to RFQ
+        public static RFQ ToRFQ(this CreateRFQCommand command)
+        {
+            return new RFQ
+            {
+                Id = Guid.NewGuid(),
+                ContractTitle = command.ContractTitle,
+                CompanyName = command.CompanyName,
+                ScopeOfSupply = command.ScopeOfSupply,
+                PaymentTerms = command.PaymentTerms,
+                DeliveryTerms = command.DeliveryTerms,
+                OtherInformation = command.OtherInformation,
+                Status = command.Status,
+                Deadline = command.Deadline,
+                Visibility = command.Visibility,
+                CreatedAt = DateTime.UtcNow,
+                CreatedByUserId = command.CreatedByUserId,
+                Recipients = command.RecipientEmails.Select(email => new RFQRecipient
                 {
-                    FileName = d.FileName,
-                    FileType = d.FileType,
-                    FileUrl = d.FileUrl
+                    Email = email
                 }).ToList()
             };
         }
 
-        public static RFQDocumentResponseModel ToRFQDocumentResponse(this RFQDocument document)
+        // Mapping from RFQUpdateRequestModel to UpdateRFQCommand
+        public static UpdateRFQCommand ToCommand(this RFQUpdateRequestModel request, Guid id)
         {
-            return new RFQDocumentResponseModel
+            return new UpdateRFQCommand
             {
-                FileName = document.FileName,
-                FileType = document.FileType,
-                FileUrl = document.FileUrl
+                Id = id,
+                ContractTitle = request.ContractTitle,
+                CompanyName = request.CompanyName,
+                ScopeOfSupply = request.ScopeOfSupply,
+                PaymentTerms = request.PaymentTerms,
+                DeliveryTerms = request.DeliveryTerms,
+                OtherInformation = request.OtherInformation,
+                Status = request.Status,
+                Deadline = request.Deadline,
+                Visibility = request.Visibility,
+                RecipientEmails = request.RecipientEmails
             };
         }
 
-        public static RFQDocument ToRFQDocument(this DocumentUploadRequest document)
+        // Mapping from UpdateRFQCommand to RFQ for updates
+        public static void UpdateFromCommand(this RFQ rfq, UpdateRFQCommand command)
         {
-            return new RFQDocument
+            rfq.ContractTitle = command.ContractTitle;
+            rfq.CompanyName = command.CompanyName;
+            rfq.ScopeOfSupply = command.ScopeOfSupply;
+            rfq.PaymentTerms = command.PaymentTerms;
+            rfq.DeliveryTerms = command.DeliveryTerms;
+            rfq.OtherInformation = command.OtherInformation;
+            rfq.Status = command.Status;
+            rfq.Deadline = command.Deadline;
+            rfq.Visibility = command.Visibility;
+
+            // Update recipients
+            rfq.Recipients.Clear();
+            rfq.Recipients = command.RecipientEmails.Select(email => new RFQRecipient
             {
-                FileName = document.Name,
-                FileType = document.ContentType,
-                FileUrl = document.FileUrl
-            };
+                RFQId = rfq.Id,
+                Email = email
+            }).ToList();
         }
-
-
-
     }
 }

@@ -1,6 +1,5 @@
 {
   "Routes": [
-    //AuthService
     {
       "DownstreamPathTemplate": "/api/auth/login",
       "DownstreamScheme": "https",
@@ -11,8 +10,81 @@
         }
       ],
       "UpstreamPathTemplate": "/api/auth/login",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": [ "POST" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/auth/register/corporate",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 55426
+        }
+      ],
+      "UpstreamPathTemplate": "/api/auth/register/corporate",
+      "UpstreamHttpMethod": [ "POST" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/auth/register/msme",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 55426
+        }
+      ],
+      "UpstreamPathTemplate": "/api/auth/register/msme",
+      "UpstreamHttpMethod": [ "POST" ]
+    },
+
+    //RFQ service
+    {
+      "DownstreamPathTemplate": "/api/rfq/createRFQ",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7241
+        }
+      ],
+      "UpstreamPathTemplate": "/api/rfq",
+      "UpstreamHttpMethod": [ "POST" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/rfq",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7241
+        }
+      ],
+      "UpstreamPathTemplate": "/api/rfq",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/rfq",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7241
+        }
+      ],
+      "UpstreamPathTemplate": "/api/rfq",
+      "UpstreamHttpMethod": [ "PUT" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/rfq",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7241
+        }
+      ],
+      "UpstreamPathTemplate": "/api/rfq",
+      "UpstreamHttpMethod": [ "DELETE" ]
     }
-   
   ]
 }
