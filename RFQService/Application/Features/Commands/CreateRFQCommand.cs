@@ -16,6 +16,6 @@ namespace RFQService.Application.Features.Commands
         public DateTime Deadline { get; set; }
         public VisibilityType Visibility { get; set; }
         public Guid CreatedByUserId { get; set; }
-        public List<string> RecipientEmails { get; set; } = new();
+        public List<string>? RecipientEmails { get; set; } = new();
     }
 }

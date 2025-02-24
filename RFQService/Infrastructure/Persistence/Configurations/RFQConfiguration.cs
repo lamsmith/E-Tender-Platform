@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RFQService.Domain.Entities;
 
 namespace RFQService.Infrastructure.Persistence.Configurations
@@ -8,7 +8,7 @@ namespace RFQService.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<RFQ> builder)
         {
-            builder.ToTable("RFQs");
+            builder.ToTable("RFQs"); 
 
             // Primary Key
             builder.HasKey(r => r.Id);
@@ -31,7 +31,12 @@ namespace RFQService.Infrastructure.Persistence.Configurations
                .HasMaxLength(10000);
 
             builder.Property(r => r.OtherInformation)
-              .HasMaxLength(10000);
+                .HasMaxLength(10000)
+                .IsRequired(false); 
+
+            builder.Property(r => r.CompanyName)
+                .IsRequired()
+                .HasMaxLength(255);
 
             builder.Property(r => r.Deadline)
                 .IsRequired();
@@ -40,19 +45,19 @@ namespace RFQService.Infrastructure.Persistence.Configurations
                 .IsRequired()
                 .HasConversion<string>();
 
+            builder.Property(r => r.Status)
+                .IsRequired()
+                .HasConversion<string>();
 
             builder.Property(r => r.CreatedByUserId)
-                .IsRequired();
-
-        
-
+                .IsRequired()
+                .HasColumnType("uuid"); // If using PostgreSQL
 
             // Relationship with RFQRecipient
             builder.HasMany(r => r.Recipients)
-                .WithOne() // RFQRecipient doesn't have a navigation property back to RFQ
+                .WithOne(rr => rr.RFQ)
                 .HasForeignKey(rr => rr.RFQId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }
-
 }

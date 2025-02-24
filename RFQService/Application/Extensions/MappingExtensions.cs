@@ -59,7 +59,7 @@ namespace RFQService.Application.Extensions
         }
 
         // Mapping from RFQCreationRequestModel to CreateRFQCommand
-        public static CreateRFQCommand ToCommand(this RFQCreationRequestModel request)
+        public static CreateRFQCommand ToCommand(this RFQCreationRequestModel request, Guid createdByUserId)
         {
             return new CreateRFQCommand
             {
@@ -72,31 +72,8 @@ namespace RFQService.Application.Extensions
                 Status = Status.Open,
                 Deadline = request.Deadline,
                 Visibility = request.Visibility,
-                RecipientEmails = request.RecipientEmails ?? new List<string>()
-            };
-        }
-
-        // Mapping from CreateRFQCommand to RFQ
-        public static RFQ ToRFQ(this CreateRFQCommand command)
-        {
-            return new RFQ
-            {
-                Id = Guid.NewGuid(),
-                ContractTitle = command.ContractTitle,
-                CompanyName = command.CompanyName,
-                ScopeOfSupply = command.ScopeOfSupply,
-                PaymentTerms = command.PaymentTerms,
-                DeliveryTerms = command.DeliveryTerms,
-                OtherInformation = command.OtherInformation,
-                Status = command.Status,
-                Deadline = command.Deadline,
-                Visibility = command.Visibility,
-                CreatedAt = DateTime.UtcNow,
-                CreatedByUserId = command.CreatedByUserId,
-                Recipients = command.RecipientEmails.Select(email => new RFQRecipient
-                {
-                    Email = email
-                }).ToList()
+                CreatedByUserId = createdByUserId,
+                RecipientEmails = new List<string>()
             };
         }
 
@@ -139,6 +116,30 @@ namespace RFQService.Application.Extensions
                 RFQId = rfq.Id,
                 Email = email
             }).ToList();
+        }
+
+        // Mapping from CreateRFQCommand to RFQ
+        public static RFQ ToRFQ(this CreateRFQCommand command)
+        {
+            return new RFQ
+            {
+                Id = Guid.NewGuid(),
+                ContractTitle = command.ContractTitle,
+                CompanyName = command.CompanyName,
+                ScopeOfSupply = command.ScopeOfSupply,
+                PaymentTerms = command.PaymentTerms,
+                DeliveryTerms = command.DeliveryTerms,
+                OtherInformation = command.OtherInformation,
+                Status = command.Status,
+                Deadline = command.Deadline,
+                Visibility = command.Visibility,
+                CreatedAt = DateTime.UtcNow,
+                CreatedByUserId = command.CreatedByUserId,
+                Recipients = command.RecipientEmails?.Select(email => new RFQRecipient
+                {
+                    Email = email
+                }).ToList() ?? new List<RFQRecipient>()
+            };
         }
     }
 }

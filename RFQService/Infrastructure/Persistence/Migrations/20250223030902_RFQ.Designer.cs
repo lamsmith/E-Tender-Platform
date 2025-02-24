@@ -12,7 +12,7 @@ using RFQService.Infrastructure.Persistence.Context;
 namespace RFQService.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(RFQDbContext))]
-    [Migration("20250221221420_RFQ")]
+    [Migration("20250223030902_RFQ")]
     partial class RFQ
     {
         /// <inheritdoc />
@@ -33,7 +33,8 @@ namespace RFQService.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("CompanyName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("ContractTitle")
                         .IsRequired()
@@ -42,9 +43,6 @@ namespace RFQService.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
 
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uuid");
@@ -72,8 +70,9 @@ namespace RFQService.Infrastructure.Persistence.Migrations
                         .HasMaxLength(10000)
                         .HasColumnType("character varying(10000)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -103,6 +102,8 @@ namespace RFQService.Infrastructure.Persistence.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("RFQId", "UserId");
+
+                    b.HasIndex("Email");
 
                     b.HasIndex("RFQId");
 

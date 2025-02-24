@@ -1,11 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RFQService.Application.Common.Interface.Repositories;
 using RFQService.Domain.Entities;
 using RFQService.Domain.Enums;
 using RFQService.Domain.Paging;
 using RFQService.Infrastructure.Persistence.Context;
+using StackExchange.Redis;
 
 namespace RFQService.Infrastructure.Persistence.Repositories
 {
@@ -13,18 +17,30 @@ namespace RFQService.Infrastructure.Persistence.Repositories
     {
         private readonly RFQDbContext _context;
         private readonly IDistributedCache _cache;
+        private ILogger <RFQRepository> _logger;
 
-        public RFQRepository(RFQDbContext context, IDistributedCache cache)
+        public RFQRepository(RFQDbContext context, IDistributedCache cache, ILogger<RFQRepository> logger)
         {
             _context = context;
             _cache = cache;
+            _logger = logger;
         }
 
         public async Task<RFQ> AddAsync(RFQ rfq)
         {
             var addedRfq = await _context.RFQs.AddAsync(rfq);
             await _context.SaveChangesAsync();
-            await CacheRFQAsync(addedRfq.Entity);
+
+            try
+            {
+                await CacheRFQAsync(addedRfq.Entity);
+            }
+            catch (RedisConnectionException ex)
+            {
+                _logger.LogError("Redis connection error: {Message}", ex.Message);
+              
+            }
+
             return addedRfq.Entity;
         }
 
@@ -116,12 +132,39 @@ namespace RFQService.Infrastructure.Persistence.Repositories
 
         public async Task CacheRFQAsync(RFQ rfq)
         {
-            var cacheEntryOptions = new DistributedCacheEntryOptions()
-                .SetAbsoluteExpiration(TimeSpan.FromMinutes(30)); 
+            if (rfq == null)
+            {
+                _logger.LogError("RFQ is null, skipping caching.");
+                return;
+            }
 
-            var serializedRfq = JsonConvert.SerializeObject(rfq);
-            await _cache.SetStringAsync($"rfq:{rfq.Id}", serializedRfq, cacheEntryOptions);
+            if (rfq.Id == Guid.Empty)
+            {
+                _logger.LogError("RFQ ID is empty, skipping caching.");
+                return;
+            }
+
+            try
+            {
+                var cacheEntryOptions = new DistributedCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(30));
+
+                var serializedRfq = JsonConvert.SerializeObject(rfq, new JsonSerializerSettings
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                });
+
+                await _cache.SetStringAsync($"rfq:{rfq.Id}", serializedRfq, cacheEntryOptions);
+
+                _logger.LogInformation("Successfully cached RFQ ID: {RfqId}", rfq.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error serializing or caching RFQ ID: {RfqId}", rfq.Id);
+                throw;
+            }
         }
+
 
         public async Task<RFQ> GetCachedRFQAsync(Guid id)
         {

@@ -5,7 +5,6 @@ using RFQService.Domain.Entities;
 using System.ComponentModel.DataAnnotations;
 using MassTransit;
 using SharedLibrary.Models.Messages.RfqEvents;
-using RFQService.Application.Extensions;
 
 namespace RFQService.Application.Features.Handlers
 {
@@ -38,26 +37,41 @@ namespace RFQService.Application.Features.Handlers
                 // Validate recipients
                 ValidateRecipients(request.RecipientEmails);
 
-                // Use mapping extension to update RFQ
-                existingRFQ.UpdateFromCommand(request);
+                // Update RFQ properties
+                existingRFQ.ContractTitle = request.ContractTitle;
+                existingRFQ.CompanyName = request.CompanyName;
+                existingRFQ.ScopeOfSupply = request.ScopeOfSupply;
+                existingRFQ.PaymentTerms = request.PaymentTerms;
+                existingRFQ.DeliveryTerms = request.DeliveryTerms;
+                existingRFQ.OtherInformation = request.OtherInformation;
+                existingRFQ.Status = request.Status;
+                existingRFQ.Deadline = request.Deadline;
+                existingRFQ.Visibility = request.Visibility;
+
+                // Update recipients
+                existingRFQ.Recipients.Clear();
+                existingRFQ.Recipients = request.RecipientEmails.Select(email => new RFQRecipient
+                {
+                    RFQId = existingRFQ.Id,
+                    Email = email
+                }).ToList();
 
                 var updatedRFQ = await _rfqRepository.UpdateAsync(existingRFQ);
                 var isSuccess = updatedRFQ != null;
 
                 if (isSuccess)
                 {
-                    // Publish RFQ updated event
                     await _publishEndpoint.Publish(new RfqUpdatedMessage
                     {
-                        RfqId = updatedRFQ.Id,
-                        ContractTitle = updatedRFQ.ContractTitle,
-                        Visibility = updatedRFQ.Visibility.ToString(),
+                        RfqId = existingRFQ.Id,
+                        ContractTitle = existingRFQ.ContractTitle,
+                        Visibility = existingRFQ.Visibility.ToString(),
                         UpdatedAt = DateTime.UtcNow,
-                        Deadline = updatedRFQ.Deadline,
-                        RecipientEmails = updatedRFQ.Recipients.Select(r => r.Email).ToList()
+                        Deadline = existingRFQ.Deadline,
+                        RecipientEmails = existingRFQ.Recipients.Select(r => r.Email).ToList()
                     }, cancellationToken);
 
-                    _logger.LogInformation("RFQ updated successfully. RFQ ID: {RfqId}", updatedRFQ.Id);
+                    _logger.LogInformation("RFQ updated successfully. RFQ ID: {RfqId}", existingRFQ.Id);
                 }
 
                 return isSuccess;

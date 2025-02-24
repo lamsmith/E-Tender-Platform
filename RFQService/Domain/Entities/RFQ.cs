@@ -15,7 +15,7 @@ namespace RFQService.Domain.Entities
         public Status Status { get; set; }
         public VisibilityType Visibility { get; set; }
         public Guid CreatedByUserId { get; set; }
-        public ICollection<RFQRecipient> Recipients { get; set; } = new List<RFQRecipient>();
+        public ICollection<RFQRecipient>? Recipients { get; set; } = new List<RFQRecipient>();
         
        
          

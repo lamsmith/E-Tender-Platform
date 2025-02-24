@@ -37,7 +37,7 @@
       "UpstreamHttpMethod": [ "POST" ]
     },
 
-    //RFQ service
+    //RFQ Routes
     {
       "DownstreamPathTemplate": "/api/rfq/createRFQ",
       "DownstreamScheme": "https",
@@ -47,11 +47,17 @@
           "Port": 7241
         }
       ],
-      "UpstreamPathTemplate": "/api/rfq",
-      "UpstreamHttpMethod": [ "POST" ]
+      "UpstreamPathTemplate": "/api/RFQ/createRFQ",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "JwtBearer",
+        "AllowedScopes": []
+      }
     },
+
+
     {
-      "DownstreamPathTemplate": "/api/rfq",
+      "DownstreamPathTemplate": "/api/rfq/all",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -59,11 +65,16 @@
           "Port": 7241
         }
       ],
-      "UpstreamPathTemplate": "/api/rfq",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamPathTemplate": "/api/RFQ/all",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "JwtBearer",
+        "AllowedScopes": []
+      }
     },
+
     {
-      "DownstreamPathTemplate": "/api/rfq",
+      "DownstreamPathTemplate": "/api/rfq/{id}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -71,20 +82,15 @@
           "Port": 7241
         }
       ],
-      "UpstreamPathTemplate": "/api/rfq",
-      "UpstreamHttpMethod": [ "PUT" ]
-    },
-    {
-      "DownstreamPathTemplate": "/api/rfq",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 7241
-        }
-      ],
-      "UpstreamPathTemplate": "/api/rfq",
-      "UpstreamHttpMethod": [ "DELETE" ]
+      "UpstreamPathTemplate": "/api/RFQ/{id}",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "JwtBearer",
+        "AllowedScopes": []
+      }
     }
+
+
+
   ]
 }

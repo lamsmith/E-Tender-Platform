@@ -37,50 +37,48 @@ namespace RFQService.Application.Features.Handlers
 
                 if (string.IsNullOrEmpty(userId))
                 {
+                    _logger.LogWarning("Unauthorized access attempt - User not authenticated");
                     throw new UnauthorizedAccessException("User not authenticated.");
                 }
+
+                _logger.LogInformation(
+                    "Creating RFQ. Title: {Title}, Company: {Company}, CreatedBy: {UserId}",
+                    request.ContractTitle,
+                    request.CompanyName,
+                    userId);
 
                 // Validate recipients
                 ValidateRecipients(request.RecipientEmails);
 
-                // Use custom mapping to create RFQ
+                // custom mapping to create RFQ
                 var rfq = request.ToRFQ();
 
                 var createdRFQ = await _rfqRepository.AddAsync(rfq);
 
-                //// Publish RFQ created event using MassTransit
-                //await _publishEndpoint.Publish(new RfqCreatedMessage
-                //{
-                //    RfqId = createdRFQ.Id,
-                //    ContractTitle = createdRFQ.ContractTitle,
-                //    CompanyName = createdRFQ.CompanyName,
-                //    ScopeOfSupply = createdRFQ.ScopeOfSupply,
-                //    PaymentTerms = createdRFQ.PaymentTerms,
-                //    DeliveryTerms = createdRFQ.DeliveryTerms,
-                //    OtherInformation = createdRFQ.OtherInformation,
-                //    CreatedByUserId = createdRFQ.CreatedByUserId,
-                //    Visibility = createdRFQ.Visibility.ToString(),
-                //    CreatedAt = createdRFQ.CreatedAt,
-                //    Deadline = createdRFQ.Deadline,
-                //  //  RecipientEmails = createdRFQ.Recipients.Select(r => r.Email).ToList()
-                //}, cancellationToken);
-
-                _logger.LogInformation("RFQ created and event published. RFQ ID: {RfqId}", createdRFQ.Id);
+                _logger.LogInformation(
+                    "RFQ created successfully. ID: {RfqId}, Title: {Title}, Recipients: {RecipientCount}",
+                    createdRFQ.Id,
+                    createdRFQ.ContractTitle,
+                    createdRFQ.Recipients?.Count ?? 0);
 
                 return createdRFQ.Id;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating RFQ: {Title}", request.ContractTitle);
+                _logger.LogError(
+                    ex,
+                    "Error creating RFQ. Title: {Title}, Error: {Error}",
+                    request.ContractTitle,
+                    ex.Message);
                 throw;
             }
         }
 
-        private void ValidateRecipients(List<string> emails)
+        private void ValidateRecipients(List<string>? emails)
         {
-            if (!emails.Any())
+            if (emails == null || !emails.Any())
             {
-                throw new ValidationException("At least one recipient email is required.");
+                return;
             }
 
             foreach (var email in emails)
@@ -96,6 +94,7 @@ namespace RFQService.Application.Features.Handlers
                 }
             }
         }
+
 
         private bool IsValidEmail(string email)
         {

@@ -12,7 +12,10 @@ namespace RFQService.Application.DTO.Requests
         public string OtherInformation { get; set; }
         public DateTime Deadline { get; set; }
         public VisibilityType Visibility { get; set; }
-        public List<string> RecipientEmails { get; set; } = new();
         public Guid CreatedByUserId { get; set; }
+
     }
+
+
+
 }

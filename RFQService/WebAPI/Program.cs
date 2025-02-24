@@ -12,6 +12,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
+using Serilog;
+using Serilog.Events;
 
 namespace RFQService.WebAPI
 {
@@ -20,6 +23,19 @@ namespace RFQService.WebAPI
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // Configure Serilog
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration)
+                //.Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.File(
+                    path: "Logs/rfq-.log",
+                    rollingInterval: RollingInterval.Day,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+                .CreateLogger();
+
+            builder.Host.UseSerilog();
 
             // Add DbContext
             builder.Services.AddDbContext<RFQDbContext>(options =>
@@ -39,6 +55,9 @@ namespace RFQService.WebAPI
             // Register cache service
             builder.Services.AddScoped<ICacheService, RedisCacheService>();
 
+            //  Register MediatR
+            builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+
             // Configure JWT Authentication
             builder.Services.AddAuthentication(options =>
             {
@@ -53,8 +72,8 @@ namespace RFQService.WebAPI
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = "AuthService", // Matches Auth settings
-                    ValidAudience = "ETenderPlatform",
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(
                         Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!))
                 };
@@ -140,13 +159,50 @@ namespace RFQService.WebAPI
 
             app.UseHttpsRedirection();
 
-            // Add authentication and authorization middleware
+            // Add this before app.UseAuthentication()
+            app.Use(async (context, next) =>
+            {
+                var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+
+                if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
+                {
+                    logger.LogInformation("Auth header present: {Auth}", authHeader.ToString());
+
+                    // Log claims if token is present
+                    if (context.User?.Identity?.IsAuthenticated ?? false)
+                    {
+                        foreach (var claim in context.User.Claims)
+                        {
+                            logger.LogInformation("Claim: {Type} = {Value}", claim.Type, claim.Value);
+                        }
+                    }
+                }
+                else
+                {
+                    logger.LogWarning("No Authorization header present");
+                }
+
+                await next();
+            });
+
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
 
-            app.Run();
+            try
+            {
+                Log.Information("Starting RFQ Service");
+                app.Run();
+            }
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "RFQ Service terminated unexpectedly");
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
     }
 }

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using RFQService.Application.DTO.Requests;
 using RFQService.Infrastructure.Authorization;
 using RFQService.Application.Extensions;
+using System.Security.Claims;
 
 namespace RFQService.WebAPI.Controllers
 {
@@ -38,18 +39,35 @@ namespace RFQService.WebAPI.Controllers
         {
             try
             {
-                var command = request.ToCommand();
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("User ID not found in token");
+                    return Unauthorized(new { message = "User ID not found in token" });
+                }
+
+                _logger.LogInformation(
+                    "Creating RFQ request. Title: {Title}, User: {UserId}",
+                    request.ContractTitle,
+                    userId);
+
+                var command = request.ToCommand(Guid.Parse(userId));
                 var result = await _mediator.Send(command);
+
+                _logger.LogInformation(
+                    "RFQ created successfully. ID: {RfqId}",
+                    result);
+
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating RFQ");
+                _logger.LogError(ex, "Error creating RFQ. Title: {Title}", request.ContractTitle);
                 return StatusCode(500, new { message = "Error creating RFQ" });
             }
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{rfqId}")]
         [Authorize(Policy = "RequireAuthenticatedUser")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -78,7 +96,7 @@ namespace RFQService.WebAPI.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpGet("all")]
         public async Task<IActionResult> GetAll([FromQuery] PageRequest pageRequest)
         {
             try
