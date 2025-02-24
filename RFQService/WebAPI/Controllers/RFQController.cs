@@ -67,7 +67,7 @@ namespace RFQService.WebAPI.Controllers
             }
         }
 
-        [HttpGet("{rfqId}")]
+        [HttpGet("{Id}")]
         [Authorize(Policy = "RequireAuthenticatedUser")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -113,6 +113,7 @@ namespace RFQService.WebAPI.Controllers
         }
 
         [HttpPut("{id}")]
+        [AuthorizeRoles("Corporate")]
         public async Task<IActionResult> Update(Guid id, [FromBody] RFQUpdateRequestModel request)
         {
             try

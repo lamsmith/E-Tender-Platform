@@ -3,24 +3,23 @@ using RFQService.Application.Common.Interface.Repositories;
 using RFQService.Application.Features.Commands;
 using RFQService.Domain.Entities;
 using System.ComponentModel.DataAnnotations;
-using MassTransit;
-using SharedLibrary.Models.Messages.RfqEvents;
+using System.Security.Claims;
 
 namespace RFQService.Application.Features.Handlers
 {
     public class UpdateRFQCommandHandler : IRequestHandler<UpdateRFQCommand, bool>
     {
         private readonly IRFQRepository _rfqRepository;
-        private readonly IPublishEndpoint _publishEndpoint;
+        private readonly IHttpContextAccessor _httpContextAccessor; // To access the current user's claims
         private readonly ILogger<UpdateRFQCommandHandler> _logger;
 
         public UpdateRFQCommandHandler(
             IRFQRepository rfqRepository,
-            IPublishEndpoint publishEndpoint,
+            IHttpContextAccessor httpContextAccessor,
             ILogger<UpdateRFQCommandHandler> logger)
         {
             _rfqRepository = rfqRepository;
-            _publishEndpoint = publishEndpoint;
+            _httpContextAccessor = httpContextAccessor;
             _logger = logger;
         }
 
@@ -34,10 +33,21 @@ namespace RFQService.Application.Features.Handlers
                     throw new KeyNotFoundException($"RFQ with ID {request.Id} not found.");
                 }
 
-                // Validate recipients
-                ValidateRecipients(request.RecipientEmails);
+               
+                var userId = GetCurrentUserId();
+                if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out Guid parsedUserId) || existingRFQ.CreatedByUserId != parsedUserId)
+                {
+                    _logger.LogWarning("User {UserId} is not authorized to update RFQ {RfqId}", userId, request.Id);
+                    throw new UnauthorizedAccessException("Only the creator of the RFQ can update it.");
+                }
 
-                // Update RFQ properties
+                
+                if (request.RecipientEmails != null && request.RecipientEmails.Any())
+                {
+                    ValidateRecipients(request.RecipientEmails);
+                }
+
+                
                 existingRFQ.ContractTitle = request.ContractTitle;
                 existingRFQ.CompanyName = request.CompanyName;
                 existingRFQ.ScopeOfSupply = request.ScopeOfSupply;
@@ -47,32 +57,21 @@ namespace RFQService.Application.Features.Handlers
                 existingRFQ.Status = request.Status;
                 existingRFQ.Deadline = request.Deadline;
                 existingRFQ.Visibility = request.Visibility;
+                existingRFQ.Recipients = new List<RFQRecipient>();
 
-                // Update recipients
-                existingRFQ.Recipients.Clear();
-                existingRFQ.Recipients = request.RecipientEmails.Select(email => new RFQRecipient
+
+                if (request.RecipientEmails != null && request.RecipientEmails.Any())
                 {
-                    RFQId = existingRFQ.Id,
-                    Email = email
-                }).ToList();
+                    existingRFQ.Recipients.Clear();
+                    existingRFQ.Recipients = request.RecipientEmails.Select(email => new RFQRecipient
+                    {
+                        RFQId = existingRFQ.Id,
+                        Email = email
+                    }).ToList();
+                }
 
                 var updatedRFQ = await _rfqRepository.UpdateAsync(existingRFQ);
                 var isSuccess = updatedRFQ != null;
-
-                if (isSuccess)
-                {
-                    await _publishEndpoint.Publish(new RfqUpdatedMessage
-                    {
-                        RfqId = existingRFQ.Id,
-                        ContractTitle = existingRFQ.ContractTitle,
-                        Visibility = existingRFQ.Visibility.ToString(),
-                        UpdatedAt = DateTime.UtcNow,
-                        Deadline = existingRFQ.Deadline,
-                        RecipientEmails = existingRFQ.Recipients.Select(r => r.Email).ToList()
-                    }, cancellationToken);
-
-                    _logger.LogInformation("RFQ updated successfully. RFQ ID: {RfqId}", existingRFQ.Id);
-                }
 
                 return isSuccess;
             }
@@ -83,20 +82,15 @@ namespace RFQService.Application.Features.Handlers
             }
         }
 
+        private string GetCurrentUserId()
+        {
+            return _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        }
+
         private void ValidateRecipients(List<string> emails)
         {
-            if (!emails.Any())
+            foreach (var email in emails.Where(e => !string.IsNullOrWhiteSpace(e)))
             {
-                throw new ValidationException("At least one recipient email is required.");
-            }
-
-            foreach (var email in emails)
-            {
-                if (string.IsNullOrWhiteSpace(email))
-                {
-                    throw new ValidationException("Email address cannot be empty.");
-                }
-
                 if (!IsValidEmail(email))
                 {
                     throw new ValidationException($"Invalid email format: {email}");

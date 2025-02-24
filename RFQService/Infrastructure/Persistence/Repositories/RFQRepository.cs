@@ -66,17 +66,29 @@ namespace RFQService.Infrastructure.Persistence.Repositories
 
         public async Task<RFQ> GetByIdAsync(Guid id)
         {
-            // First check cache
-            var cachedRfq = await GetCachedRFQAsync(id);
-            if (cachedRfq != null) return cachedRfq;
+            try
+            {
+                
+                var cachedRfq = await GetCachedRFQAsync(id);
+                if (cachedRfq != null) return cachedRfq;
 
-            // If not in cache, get from DB and cache it
-            var rfq = await _context.RFQs
-                .Include(r => r.Recipients)
-                .FirstOrDefaultAsync(r => r.Id == id);
+                
+                var rfq = await _context.RFQs
+                    .FirstOrDefaultAsync(r => r.Id == id);
 
-            if (rfq != null) await CacheRFQAsync(rfq);
-            return rfq;
+                if (rfq != null)
+                {
+                    await CacheRFQAsync(rfq);
+                    return rfq;
+                }
+
+                return null; 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving RFQ with ID: {Id}", id);
+                throw;
+            }
         }
 
         public async Task<PaginatedList<RFQ>> GetAllAsync(PageRequest pageRequest, bool usePaging = true)

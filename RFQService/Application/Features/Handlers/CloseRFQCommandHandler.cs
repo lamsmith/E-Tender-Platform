@@ -10,16 +10,14 @@ namespace RFQService.Application.Features.Handlers
     public class CloseRFQCommandHandler : IRequestHandler<CloseRFQCommand, bool>
     {
         private readonly IRFQRepository _rfqRepository;
-        private readonly IPublishEndpoint _publishEndpoint;
+      
         private readonly ILogger<CloseRFQCommandHandler> _logger;
 
         public CloseRFQCommandHandler(
             IRFQRepository rfqRepository,
-            IPublishEndpoint publishEndpoint,
             ILogger<CloseRFQCommandHandler> logger)
         {
             _rfqRepository = rfqRepository;
-            _publishEndpoint = publishEndpoint;
             _logger = logger;
         }
 
@@ -33,15 +31,8 @@ namespace RFQService.Application.Features.Handlers
                 rfq.Status = Status.Closed;
                 await _rfqRepository.UpdateAsync(rfq);
 
-                // Publish RFQ closed event
-                await _publishEndpoint.Publish(new RfqStatusChangedMessage
-                {
-                    RfqId = rfq.Id,
-                    NewStatus = Status.Closed.ToString(),
-                    ChangedAt = DateTime.UtcNow
-                }, cancellationToken);
 
-                _logger.LogInformation("RFQ closed and event published. RFQ ID: {RfqId}", rfq.Id);
+                _logger.LogInformation("RFQ closed. RFQ ID: {RfqId}", rfq.Id);
 
                 return true;
             }
