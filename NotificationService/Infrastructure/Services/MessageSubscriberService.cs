@@ -25,7 +25,6 @@ namespace NotificationService.Infrastructure.Services
             {
                 _logger.LogInformation("Message subscriber service is starting");
 
-                // The consumers are already configured in Program.cs using MassTransit's configuration
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);

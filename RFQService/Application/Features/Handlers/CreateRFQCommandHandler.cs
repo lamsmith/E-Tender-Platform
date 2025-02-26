@@ -16,16 +16,19 @@ namespace RFQService.Application.Features.Handlers
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IPublishEndpoint _publishEndpoint;
         private readonly ILogger<CreateRFQCommandHandler> _logger;
+        private readonly IConfiguration _configuration;
 
         public CreateRFQCommandHandler(
             IRFQRepository rfqRepository,
             IHttpContextAccessor httpContextAccessor,
             IPublishEndpoint publishEndpoint,
+            IConfiguration configuration,
             ILogger<CreateRFQCommandHandler> logger)
         {
             _rfqRepository = rfqRepository;
             _httpContextAccessor = httpContextAccessor;
             _publishEndpoint = publishEndpoint;
+            _configuration = configuration;
             _logger = logger;
         }
 
@@ -47,13 +50,33 @@ namespace RFQService.Application.Features.Handlers
                     request.CompanyName,
                     userId);
 
-                // Validate recipients
+              
                 ValidateRecipients(request.RecipientEmails);
 
-                // custom mapping to create RFQ
+              
                 var rfq = request.ToRFQ();
 
                 var createdRFQ = await _rfqRepository.AddAsync(rfq);
+
+                
+               
+                if (request.RecipientEmails?.Any() == true)
+                {
+                    _logger.LogInformation(
+                        "Sending RFQ email notifications to {RecipientCount} recipients",
+                        request.RecipientEmails.Count);
+
+                    var frontendUrl = _configuration["RFQConfig:FrontendUrl"];
+
+                    await _publishEndpoint.Publish(new RfqEmailNotificationMessage
+                    {
+                        RfqId = createdRFQ.Id,
+                        ContractTitle = createdRFQ.ContractTitle,
+                        RecipientEmails = request.RecipientEmails,
+                        RfqLink = $"http://localhost:7241/rfq/{createdRFQ.Id}",
+                        Deadline = createdRFQ.Deadline
+                    }, cancellationToken);
+                }
 
                 _logger.LogInformation(
                     "RFQ created successfully. ID: {RfqId}, Title: {Title}, Recipients: {RecipientCount}",

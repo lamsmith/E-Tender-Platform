@@ -53,7 +53,6 @@ namespace RFQService.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(10000)");
 
                     b.Property<string>("OtherInformation")
-                        .IsRequired()
                         .HasMaxLength(10000)
                         .HasColumnType("character varying(10000)");
 
@@ -88,17 +87,21 @@ namespace RFQService.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("RFQService.Domain.Entities.RFQRecipient", b =>
                 {
-                    b.Property<Guid>("RFQId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("UserId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("RFQId", "UserId");
+                    b.Property<Guid>("RFQId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("Email");
 

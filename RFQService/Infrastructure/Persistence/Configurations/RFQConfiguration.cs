@@ -51,7 +51,7 @@ namespace RFQService.Infrastructure.Persistence.Configurations
 
             builder.Property(r => r.CreatedByUserId)
                 .IsRequired()
-                .HasColumnType("uuid"); // If using PostgreSQL
+                .HasColumnType("uuid"); 
 
             // Relationship with RFQRecipient
             builder.HasMany(r => r.Recipients)

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace RFQService.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class RFQ : Migration
+    public partial class RFQService : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -21,7 +21,7 @@ namespace RFQService.Infrastructure.Persistence.Migrations
                     ScopeOfSupply = table.Column<string>(type: "character varying(10000)", maxLength: 10000, nullable: false),
                     PaymentTerms = table.Column<string>(type: "character varying(10000)", maxLength: 10000, nullable: false),
                     DeliveryTerms = table.Column<string>(type: "character varying(10000)", maxLength: 10000, nullable: false),
-                    OtherInformation = table.Column<string>(type: "character varying(10000)", maxLength: 10000, nullable: false),
+                    OtherInformation = table.Column<string>(type: "character varying(10000)", maxLength: 10000, nullable: true),
                     Deadline = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Status = table.Column<string>(type: "text", nullable: false),
                     Visibility = table.Column<string>(type: "text", nullable: false),
@@ -39,13 +39,14 @@ namespace RFQService.Infrastructure.Persistence.Migrations
                 name: "RFQRecipients",
                 columns: table => new
                 {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     RFQId = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: true),
                     Email = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RFQRecipients", x => new { x.RFQId, x.UserId });
+                    table.PrimaryKey("PK_RFQRecipients", x => x.Id);
                     table.ForeignKey(
                         name: "FK_RFQRecipients_RFQs_RFQId",
                         column: x => x.RFQId,

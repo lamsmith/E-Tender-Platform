@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Welcome to the Company</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 3px solid #0056b3;
+        }
+        .content {
+            padding: 20px;
+        }
+        .credentials {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #28a745;
+            margin: 20px 0;
+        }
+        .warning {
+            color: #721c24;
+            background-color: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #dee2e6;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Welcome to the Team!</h2>
+    </div>
+    <div class="content">
+        <h3>Welcome {{FirstName}} {{LastName}}!</h3>
+        <p>Your account has been created successfully.</p>
+        
+        <div class="credentials">
+            <h4>Your Account Details:</h4>
+            <p>Temporary Password: <strong>{{TempPassword}}</strong></p>
+        </div>
+
+        <div class="warning">
+            <p>Please log in and change your password at your earliest convenience.</p>
+        </div>
+
+        <p>If you have any questions, please contact the IT support team.</p>
+    </div>
+    <div class="footer">
+        <p>Best regards,<br>The IT Team</p>
+        <p><small>This is an automated message. Please do not reply to this email.</small></p>
+    </div>
+</body>
+</html> 

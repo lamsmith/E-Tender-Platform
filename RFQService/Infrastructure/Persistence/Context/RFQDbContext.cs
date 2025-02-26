@@ -18,7 +18,7 @@ namespace RFQService.Infrastructure.Persistence.Context
         {
             modelBuilder.ApplyConfiguration(new RFQConfiguration());
             modelBuilder.ApplyConfiguration(new RFQRecipientConfiguration());
-
+                
             // Apply configurations for other entities if necessary
             base.OnModelCreating(modelBuilder);
         }

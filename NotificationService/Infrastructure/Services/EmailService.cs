@@ -1,7 +1,10 @@
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
+using NotificationService.Application.Common.Interface.Services;
+using NotificationService.Models;
 using SharedLibrary.Models.Messages;
+using System.Text.RegularExpressions;
 
 namespace NotificationService.Services
 {
@@ -9,21 +12,44 @@ namespace NotificationService.Services
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<EmailService> _logger;
+        private readonly ITemplateService _templateService;
         private readonly int _maxRetries = 3;
 
         public EmailService(
             IConfiguration configuration,
+            ITemplateService templateService,
             ILogger<EmailService> logger)
         {
             _configuration = configuration;
+            _templateService = templateService;
             _logger = logger;
         }
 
         public async Task SendStaffWelcomeEmailAsync(StaffWelcomeEmailMessage message)
         {
-            var subject = "Welcome to the Company - Your Account Details";
-            var body = GenerateWelcomeEmailBody(message);
-            await SendEmailAsync(message.Email, subject, body);
+            try
+            {
+                var template = await _templateService.GetTemplateAsync("StaffWelcome");
+                var variables = new Dictionary<string, string>
+                {
+                    { "FirstName", message.FirstName },
+                    { "LastName", message.LastName },
+                    { "TempPassword", message.TempPassword }
+                };
+
+                var body = _templateService.ReplaceTemplateVariables(template, variables);
+                await SendEmailAsync(message.Email, "Welcome to the Company - Your Account Details", body);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending welcome email to {Email}", message.Email);
+                throw;
+            }
+        }
+
+        public async Task SendEmailAsync(EmailModel emailModel)
+        {
+            await SendEmailAsync(emailModel.To, emailModel.Subject, emailModel.Body);
         }
 
         public async Task SendEmailAsync(string to, string subject, string body)
@@ -35,22 +61,6 @@ namespace NotificationService.Services
             email.Body = new TextPart(MimeKit.Text.TextFormat.Html) { Text = body };
 
             await SendEmailWithRetryAsync(email);
-        }
-
-        private string GenerateWelcomeEmailBody(StaffWelcomeEmailMessage message)
-        {
-            return $@"
-                <h2>Welcome {message.FirstName} {message.LastName}!</h2>
-                <p>Your account has been created successfully.</p>
-                
-                <h3>Your Account Details:</h3>
-                <p>Temporary Password: <strong>{message.TempPassword}</strong></p>
-                
-                <p>Please log in and change your password at your earliest convenience.</p>
-                
-                <p>If you have any questions, please contact the IT support team.</p>
-                
-                <p>Best regards,<br>The IT Team</p>";
         }
 
         private async Task SendEmailWithRetryAsync(MimeMessage email)
@@ -86,10 +96,12 @@ namespace NotificationService.Services
                     }
 
                     _logger.LogWarning(ex, "Failed to send email (attempt {RetryCount}), retrying...", retryCount);
-                    await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, retryCount))); // Exponential backoff
+                    await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, retryCount))); 
                 }
             }
         }
     }
+
+ 
 }
 

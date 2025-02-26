@@ -18,13 +18,5 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
     }
-
-    //public class PendingVerificationDto
-    //{
-    //    public Guid UserId { get; set; }
-    //    public string Email { get; set; }
-    //    public string Role { get; set; }
-    //    public DateTime CreatedAt { get; set; }
-    //}
 }
 

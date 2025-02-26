@@ -56,7 +56,7 @@ namespace NotificationService.Infrastructure.MessageConsumers
                 {
                     Notification = new Notification
                     {
-                        UserId = message.BidId, // You might need to get the UserId from your bid repository
+                        UserId = message.BidId, 
                         Message = $"Your bid status has been updated to {message.NewStatus}",
                         Type = "BidStatusUpdated",
                         IsRead = false,

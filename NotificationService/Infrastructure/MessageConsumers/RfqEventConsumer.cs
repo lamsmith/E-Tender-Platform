@@ -56,7 +56,7 @@ namespace NotificationService.Infrastructure.MessageConsumers
                 {
                     Notification = new Notification
                     {
-                        UserId = message.RfqId, // You might need to get the creator's UserId from your RFQ repository
+                        UserId = message.RfqId, 
                         Message = $"RFQ status has been updated to {message.NewStatus}",
                         Type = "RfqStatusChanged",
                         IsRead = false,

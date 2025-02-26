@@ -28,8 +28,7 @@ namespace NotificationService.Infrastructure.Persistence.Configurations
             builder.Property(n => n.UserId)
                 .IsRequired(); 
 
-            // Relationships
-            // No direct navigation to User entity because User resides in a different service
+          
         }
     }
 }
