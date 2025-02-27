@@ -93,7 +93,7 @@ namespace UserService.Infrastructure.Repositories
         public async Task<(string FirstName, string LastName)?> GetUserNamesByIdAsync(Guid userId)
         {
             var result = await _context.Users
-                .Where(u => u.Id == userId)
+                .Where(u => u.UserId == userId)
                 .Select(u => new { u.Profile.FirstName, u.Profile.LastName })
                 .FirstOrDefaultAsync();
 
