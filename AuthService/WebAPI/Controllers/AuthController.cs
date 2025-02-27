@@ -45,7 +45,7 @@ namespace AuthService.WebAPI.Controllers
             }
         }
 
-        [HttpPost("register/msme")]  
+        [HttpPost("register/msme")]
         public async Task<IActionResult> RegisterMSMEUser([FromBody] UserRegistrationRequestModel request)
         {
             try
@@ -136,12 +136,9 @@ namespace AuthService.WebAPI.Controllers
         {
             try
             {
-                var (userId, tempPassword) = await _authService.CreateStaffUserAsync(
-                    request.Email);
+                var result = await _authService.CreateStaffUserAsync(request);
 
-                await _authService.SendStaffWelcomeEmailAsync(userId);
-
-                return Ok(new { UserId = userId, TempPassword = tempPassword });
+                return Ok(new { message = "Staff user created successfully" });
             }
             catch (Exception ex)
             {

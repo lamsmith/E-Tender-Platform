@@ -20,24 +20,44 @@ namespace NotificationService.Services
             ITemplateService templateService,
             ILogger<EmailService> logger)
         {
-            _configuration = configuration;
-            _templateService = templateService;
-            _logger = logger;
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _templateService = templateService ?? throw new ArgumentNullException(nameof(templateService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task SendStaffWelcomeEmailAsync(StaffWelcomeEmailMessage message)
         {
             try
             {
+                if (message == null)
+                    throw new ArgumentNullException(nameof(message), "StaffWelcomeEmailMessage cannot be null.");
+
+                _logger.LogInformation("Fetching email template for StaffWelcome...");
                 var template = await _templateService.GetTemplateAsync("StaffWelcome");
+
+                if (string.IsNullOrWhiteSpace(template))
+                {
+                    _logger.LogError("Email template 'StaffWelcome' is empty or not found.");
+                    throw new InvalidOperationException("Email template is missing or empty.");
+                }
+
                 var variables = new Dictionary<string, string>
                 {
-                    { "FirstName", message.FirstName },
-                    { "LastName", message.LastName },
-                    { "TempPassword", message.TempPassword }
+                    { "FirstName", message.FirstName ?? "[Unknown]" },
+                    { "LastName", message.LastName ?? "[Unknown]" },
+                    { "TempPassword", message.TempPassword ?? "[No Password]" }
                 };
 
+                _logger.LogInformation("Replacing template variables...");
                 var body = _templateService.ReplaceTemplateVariables(template, variables);
+
+                if (string.IsNullOrWhiteSpace(body))
+                {
+                    _logger.LogError("Generated email body is empty after replacing template variables.");
+                    throw new InvalidOperationException("Email body is missing or empty.");
+                }
+
+                _logger.LogInformation("Sending email to {Email}...", message.Email);
                 await SendEmailAsync(message.Email, "Welcome to the Company - Your Account Details", body);
             }
             catch (Exception ex)
@@ -49,17 +69,34 @@ namespace NotificationService.Services
 
         public async Task SendEmailAsync(EmailModel emailModel)
         {
+            if (emailModel == null)
+                throw new ArgumentNullException(nameof(emailModel), "EmailModel cannot be null.");
+
             await SendEmailAsync(emailModel.To, emailModel.Subject, emailModel.Body);
         }
 
         public async Task SendEmailAsync(string to, string subject, string body)
         {
+            if (string.IsNullOrWhiteSpace(to))
+                throw new ArgumentException("Recipient email cannot be empty.", nameof(to));
+
+            if (string.IsNullOrWhiteSpace(subject))
+                throw new ArgumentException("Email subject cannot be empty.", nameof(subject));
+
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                _logger.LogError("Email body is empty. Email will not be sent.");
+                throw new ArgumentException("Email body cannot be null or empty.");
+            }
+
+            _logger.LogInformation("Preparing email to send...");
             var email = new MimeMessage();
-            email.From.Add(MailboxAddress.Parse(_configuration["Email:FromAddress"]));
+            email.From.Add(MailboxAddress.Parse(_configuration["Email:SmtpHost"]));
             email.To.Add(MailboxAddress.Parse(to));
             email.Subject = subject;
             email.Body = new TextPart(MimeKit.Text.TextFormat.Html) { Text = body };
 
+            _logger.LogInformation("Email body: {Body}", body);
             await SendEmailWithRetryAsync(email);
         }
 
@@ -96,12 +133,9 @@ namespace NotificationService.Services
                     }
 
                     _logger.LogWarning(ex, "Failed to send email (attempt {RetryCount}), retrying...", retryCount);
-                    await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, retryCount))); 
+                    await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, retryCount)));
                 }
             }
         }
     }
-
- 
 }
-

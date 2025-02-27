@@ -9,6 +9,9 @@ using AuthService.Infrastructure.JWT;
 using MassTransit;
 using SharedLibrary.Enums;
 using SharedLibrary.Models.Messages;
+using System;
+using System.Linq;
+using System.Text;
 
 namespace AuthService.Infrastructure.Services
 {
@@ -137,57 +140,57 @@ namespace AuthService.Infrastructure.Services
                 throw;
             }
         }
-        public async Task<(Guid UserId, string TempPassword)> CreateStaffUserAsync(string email)
+        public async Task<(Guid UserId, string TempPassword)> CreateStaffUserAsync(CreateStaffUserRequest request)
         {
             try
             {
-                if (await _userRepository.EmailExistsAsync(email))
+                _logger.LogInformation("Creating staff user with email: {Email}", request.Email);
+
+                if (await _userRepository.EmailExistsAsync(request.Email))
+                {
+                    _logger.LogWarning("Email already exists: {Email}", request.Email);
                     throw new Exception("Email already exists");
+                }
 
                 var tempPassword = GenerateTemporaryPassword();
+                var userId = Guid.NewGuid();
 
                 var user = new User
                 {
-                    Email = email,
+                    Id = userId,
+                    Email = request.Email,
                     PasswordHash = HashPassword(tempPassword),
                     Role = Role.Staff,
                     IsActive = true,
                     RequirePasswordChange = true,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    Status = AccountStatus.Verified
                 };
 
-                var createdUser = await _userRepository.CreateAsync(user);
+                await _userRepository.CreateAsync(user);
 
-                return (createdUser.Id, tempPassword);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating staff user with email: {Email}", email);
-                throw;
-            }
-        }
-
-        public async Task SendStaffWelcomeEmailAsync(Guid userId)
-        {
-            try
-            {
-                var user = await _userRepository.GetByIdAsync(userId);
-                if (user == null)
-                    throw new Exception("User not found");
-
-                var message = new StaffWelcomeEmailMessage
+                // Send welcome email with temporary password
+                await _publishEndpoint.Publish(new StaffWelcomeEmailMessage
                 {
-                    Email = user.Email
-                };
+                    Email = request.Email,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    TempPassword = tempPassword
+                });
 
-                await _publishEndpoint.Publish(message);
+                _logger.LogInformation(
+                    "Staff user created successfully. UserId: {UserId}, Email: {Email}",
+                    userId,
+                    request.Email);
+                return (userId, tempPassword);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error sending welcome email for user: {UserId}", userId);
+                _logger.LogError(ex, "Error creating staff user with email: {Email}", request.Email);
                 throw;
             }
         }
+
 
         public async Task<bool> ResetPasswordAsync(Guid userId, string currentPassword, string newPassword)
         {
@@ -300,10 +303,29 @@ namespace AuthService.Infrastructure.Services
 
         private string GenerateTemporaryPassword(int length = 12)
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+            const string upperChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string lowerChars = "abcdefghijklmnopqrstuvwxyz";
+            const string numbers = "0123456789";
+            const string specialChars = "!@#$%^&*";
+
             var random = new Random();
-            return new string(Enumerable.Repeat(chars, length)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
+            var password = new StringBuilder();
+
+            // Ensure at least one of each type
+            password.Append(upperChars[random.Next(upperChars.Length)]);
+            password.Append(lowerChars[random.Next(lowerChars.Length)]);
+            password.Append(numbers[random.Next(numbers.Length)]);
+            password.Append(specialChars[random.Next(specialChars.Length)]);
+
+            // Fill the rest randomly
+            var allChars = upperChars + lowerChars + numbers + specialChars;
+            for (int i = 4; i < length; i++)
+            {
+                password.Append(allChars[random.Next(allChars.Length)]);
+            }
+
+            // Shuffle the password
+            return new string(password.ToString().ToCharArray().OrderBy(x => random.Next()).ToArray());
         }
 
         private string HashPassword(string password)

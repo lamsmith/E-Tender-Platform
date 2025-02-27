@@ -25,6 +25,10 @@ namespace Backoffice_Services.Infrastructure.Persistence.Configurations
                 .IsRequired()
                 .HasMaxLength(100);
 
+            builder.Property(s =>s.PhoneNumber)
+                .IsRequired()
+                .HasMaxLength(14);
+
             builder.Property(s => s.Role)
                 .IsRequired()
                 .HasConversion<string>();
