@@ -37,6 +37,19 @@
       "UpstreamHttpMethod": [ "POST" ]
     },
 
+    {
+      "DownstreamPathTemplate": "/api/auth/create/staff",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 55426
+        }
+      ],
+      "UpstreamPathTemplate": "/api/auth/create/staff",
+      "UpstreamHttpMethod": [ "POST" ]
+    },
+
     //RFQ Routes
     {
       "DownstreamPathTemplate": "/api/rfq/createRFQ",
@@ -122,8 +135,26 @@
         "AuthenticationProviderKey": "JwtBearer",
         "AllowedScopes": []
       }
-    }
+    },
 
+    //Backoffice 
+    //Staff Management
+    {
+      "DownstreamPathTemplate": "/api/StaffManagement/createStaff",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7180
+        }
+      ],
+      "UpstreamPathTemplate": "/api/StaffManagement/createStaff",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "JwtBearer",
+        "AllowedScopes": []
+      }
+    }
 
 
 

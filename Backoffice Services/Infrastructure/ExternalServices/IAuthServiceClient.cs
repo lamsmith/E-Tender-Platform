@@ -3,8 +3,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
     public interface IAuthServiceClient
     {
         Task<bool> UpdateUserVerificationStatusAsync(Guid userId, bool isApproved, string reason = null);
-        Task<(Guid UserId, string TempPassword)> CreateStaffUserAsync(string email, string role);
-        Task NotifyStaffUserAsync(Guid userId);
+        Task<(Guid UserId, string TempPassword)> CreateStaffUserAsync(string email, string firstName, string lastName);
         Task<bool> UpdateAccountStatusAsync(Guid userId, SharedLibrary.Enums.AccountStatus newStatus, string? reason = null);
     }
 

@@ -1,8 +1,8 @@
-using Backoffice_Services.Domain.Enums;
-using Backoffice_Services.Infrastructure.Authorization;
+using Backoffice_Services.Application.Common.Interfaces;
 using Backoffice_Services.Infrastructure.Cache;
 using Backoffice_Services.Infrastructure.ExternalServices;
 using Backoffice_Services.Infrastructure.Persistence.Context;
+using Backoffice_Services.Infrastructure.Repositories;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +10,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using System.Reflection;
 using System.Text;
+using SharedLibrary.Models.Messages;
 
 namespace Backoffice_Services.WebAPI
 {
@@ -62,25 +64,12 @@ namespace Backoffice_Services.WebAPI
                     };
                 });
 
-            // Add Authorization handlers
-            builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
-
-            // Add Authorization policies
-            builder.Services.AddAuthorization(options =>
-            {
-                options.AddPolicy("RequireRfqManagement", policy =>
-                    policy.Requirements.Add(new PermissionRequirement(PermissionType.RfqManagement)));
-
-                options.AddPolicy("RequireBidManagement", policy =>
-                    policy.Requirements.Add(new PermissionRequirement(PermissionType.BidManagement)));
-
-                options.AddPolicy("RequireKycReview", policy =>
-                    policy.Requirements.Add(new PermissionRequirement(PermissionType.KycReview)));
-            });
 
             // Configure MassTransit
             builder.Services.AddMassTransit(x =>
             {
+                x.AddRequestClient<CreateStaffUserMessage>();
+
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.Host(builder.Configuration["RabbitMQ:HostName"] ?? "localhost", "/", h =>
@@ -92,16 +81,20 @@ namespace Backoffice_Services.WebAPI
                     cfg.ConfigureEndpoints(context);
                 });
             });
+            builder.Services.AddHttpContextAccessor();
 
+            // Register Repository
+            builder.Services.AddScoped<IStaffRepository, StaffRepository>();
 
 
             // Add HTTP Clients
             builder.Services.AddHttpClient<IAuthServiceClient, AuthServiceClient>();
             builder.Services.AddHttpClient<IBidServiceClient, BidServiceClient>();
+            builder.Services.AddScoped<IUserProfileServiceClient, UserProfileServiceClient>();
+            builder.Services.AddScoped<IRFQServiceClient, RFQServiceClient>();
 
             // Register MediatR for CQRS
-            builder.Services.AddMediatR(cfg =>
-                cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+            builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();

@@ -39,11 +39,11 @@ namespace AuthService.Infrastructure.ExternalServices
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogError("Failed to fetch user role for UserId: {UserId}, Status Code: {StatusCode}", userId, response.StatusCode);
-                    return "User"; // Returning default value after logging error
+                    return "User"; 
                 }
 
                 var role = await response.Content.ReadFromJsonAsync<string>();
-                return role ?? "User"; // Default to "User" if null
+                return role ?? "User"; 
             }
             catch (Exception e)
             {

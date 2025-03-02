@@ -130,7 +130,7 @@ namespace AuthService.WebAPI.Controllers
             }
         }
 
-        [HttpPost("staff")]
+        [HttpPost("create/staff")]
         [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<IActionResult> CreateStaffUser([FromBody] CreateStaffUserRequest request)
         {

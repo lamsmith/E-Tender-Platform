@@ -72,6 +72,7 @@ namespace NotificationService.WebAPI
                     x.AddConsumer<EmailNotificationConsumer>();
                     x.AddConsumer<NotificationConsumer>();
                     x.AddConsumer<RfqEmailNotificationConsumer>();
+                    x.AddConsumer<StaffWelcomeEmailConsumer>();
 
                     x.UsingRabbitMq((context, cfg) =>
                     {

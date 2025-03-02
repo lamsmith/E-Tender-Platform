@@ -21,5 +21,6 @@ namespace AuthService.Domain.Entities
         public DateTime? RefreshTokenExpiryTime { get; set; }
         public bool EmailConfirmed { get; set; } = false;
         public AccountStatus Status { get; set; } = AccountStatus.Pending;
+        public ICollection<UserPermission> Permissions { get; set; }
     }
 }

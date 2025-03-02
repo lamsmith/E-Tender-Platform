@@ -37,6 +37,8 @@
     <Folder Include="Application\DTO\UserManagement\Requests\" />
     <Folder Include="Application\Features\BidManagement\" />
     <Folder Include="Application\Features\UserManagement\" />
+    <Folder Include="Infrastructure\Persistence\Migrations\" />
+    <Folder Include="Logs\" />
   </ItemGroup>
 
 </Project>

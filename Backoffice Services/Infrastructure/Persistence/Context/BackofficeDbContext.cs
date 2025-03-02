@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Backoffice_Services.Domain.Entities;
+using Backoffice_Services.Infrastructure.Persistence.Configurations;
 
 namespace Backoffice_Services.Infrastructure.Persistence.Context
 {
@@ -11,12 +12,15 @@ namespace Backoffice_Services.Infrastructure.Persistence.Context
         }
 
         public DbSet<Staff> Staff { get; set; }
-        public DbSet<StaffPermission> StaffPermissions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(BackofficeDbContext).Assembly);
+
+            // Apply entity configurations
+            modelBuilder.ApplyConfiguration(new StaffConfiguration());
+           
+
         }
     }
 }

@@ -39,12 +39,7 @@ namespace Backoffice_Services.Application.Features.Handlers
                     FirstName = staff.FirstName,
                     LastName = staff.LastName,
                     Email = staff.Email,
-                    Role = staff.Role,
                     IsActive = staff.IsActive,
-                    Permissions = staff.Permissions
-                        .Where(p => p.IsGranted)
-                        .Select(p => p.PermissionType)
-                        .ToList(),
                     CreatedAt = staff.CreatedAt,
                     LastLoginAt = staff.LastLoginAt
                 }).ToList();

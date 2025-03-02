@@ -11,9 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotificationService", "Noti
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RFQService", "RFQService\RFQService.csproj", "{275D7EE8-3B4F-47E9-BDB4-B136500ACD66}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DashboardAnalyticsSystem", "Dashboard Analytics System\DashboardAnalyticsSystem.csproj", "{7ECBF4DC-D124-4BD1-BFBC-0290B287349F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dashboard Analytics System", "Dashboard Analytics System\Dashboard Analytics System.csproj", "{7ECBF4DC-D124-4BD1-BFBC-0290B287349F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BackOfficeServices", "Backoffice Services\BackOfficeServices.csproj", "{A901E6B8-C0FF-4175-840F-3987FB666C8E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BackOffice Services", "Backoffice Services\BackOffice Services.csproj", "{A901E6B8-C0FF-4175-840F-3987FB666C8E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedLibrary", "SharedLibrary\SharedLibrary.csproj", "{ECBDF0F8-6A8A-44CE-9407-A1EAA3704916}"
 EndProject

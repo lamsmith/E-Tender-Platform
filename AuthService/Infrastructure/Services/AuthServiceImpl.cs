@@ -11,6 +11,7 @@ using SharedLibrary.Enums;
 using SharedLibrary.Models.Messages;
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 
 namespace AuthService.Infrastructure.Services
@@ -22,18 +23,21 @@ namespace AuthService.Infrastructure.Services
         private readonly IUserServiceClient _userServiceClient;
         private readonly IPublishEndpoint _publishEndpoint;
         private readonly ILogger<AuthServiceImpl> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public AuthServiceImpl(
             IUserRepository userRepository,
             IJwtTokenService jwtTokenService,
             IUserServiceClient userServiceClient,
             IPublishEndpoint publishEndpoint,
+            IHttpContextAccessor httpContextAccessor,
             ILogger<AuthServiceImpl> logger)
         {
             _userRepository = userRepository;
             _jwtTokenService = jwtTokenService;
             _userServiceClient = userServiceClient;
             _publishEndpoint = publishEndpoint;
+            _httpContextAccessor = httpContextAccessor;
             _logger = logger;
         }
 
@@ -140,12 +144,13 @@ namespace AuthService.Infrastructure.Services
                 throw;
             }
         }
-        public async Task<(Guid UserId, string TempPassword)> CreateStaffUserAsync(CreateStaffUserRequest request)
+        public async Task<Guid> CreateStaffUserAsync(CreateStaffUserRequest request)
         {
             try
             {
                 _logger.LogInformation("Creating staff user with email: {Email}", request.Email);
 
+   
                 if (await _userRepository.EmailExistsAsync(request.Email))
                 {
                     _logger.LogWarning("Email already exists: {Email}", request.Email);
@@ -164,6 +169,7 @@ namespace AuthService.Infrastructure.Services
                     IsActive = true,
                     RequirePasswordChange = true,
                     CreatedAt = DateTime.UtcNow,
+                    CreatedBy = request.InitiatorUserId,
                     Status = AccountStatus.Verified
                 };
 
@@ -182,7 +188,7 @@ namespace AuthService.Infrastructure.Services
                     "Staff user created successfully. UserId: {UserId}, Email: {Email}",
                     userId,
                     request.Email);
-                return (userId, tempPassword);
+                return userId;
             }
             catch (Exception ex)
             {
@@ -190,7 +196,6 @@ namespace AuthService.Infrastructure.Services
                 throw;
             }
         }
-
 
         public async Task<bool> ResetPasswordAsync(Guid userId, string currentPassword, string newPassword)
         {
@@ -272,7 +277,6 @@ namespace AuthService.Infrastructure.Services
                 throw;
             }
         }
-
 
         public async Task LogoutAsync(Guid userId)
         {

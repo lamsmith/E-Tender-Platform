@@ -6,63 +6,68 @@ using Backoffice_Services.Application.Features.Queries;
 using Backoffice_Services.Application.DTO.Requests;
 using Backoffice_Services.Infrastructure.Cache;
 using Backoffice_Services.Infrastructure.ExternalServices;
+using System.Security.Claims;
 
-namespace Backoffice_Services.Controllers
+namespace Backoffice_Services.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public class StaffController : ControllerBase
+    public class StaffManagementController : ControllerBase
     {
         private readonly IMediator _mediator;
         private readonly ICacheService _cacheService;
         private readonly IAuthServiceClient _authServiceClient;
-        private readonly ILogger<StaffController> _logger;
+        private readonly ILogger<StaffManagementController> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public StaffController(
+        public StaffManagementController(
             IMediator mediator,
             ICacheService cacheService,
             IAuthServiceClient authServiceClient,
-            ILogger<StaffController> logger)
+            ILogger<StaffManagementController> logger,
+            IHttpContextAccessor httpContextAccessor)
         {
             _mediator = mediator;
             _cacheService = cacheService;
             _authServiceClient = authServiceClient;
             _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
         }
 
-        [HttpPost]
+        [HttpPost("createstaff")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
         public async Task<IActionResult> CreateStaff([FromBody] CreateStaffRequest request)
         {
             try
             {
-                // First create the user in Auth Service
-                var authResult = await _authServiceClient.CreateStaffUserAsync(
-                    request.Email,
-                    request.Role.ToString());
+                _logger.LogInformation("Received create staff request for email: {Email}", request.Email);
 
-                // Then create the staff in Backoffice Service
+                var loginUser = Guid.Parse(_httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
                 var command = new CreateStaffCommand
                 {
                     Email = request.Email,
-                    Password = authResult.TempPassword,
                     FirstName = request.FirstName,
                     LastName = request.LastName,
-                    Role = request.Role,
-                    Permissions = request.Permissions
+                    InitiatorUserId = loginUser,
+                    PhoneNumber = request.PhoneNumber
                 };
 
                 var staffId = await _mediator.Send(command);
 
-                // Notify the user with welcome email
-                await _authServiceClient.NotifyStaffUserAsync(authResult.UserId);
+                _logger.LogInformation(
+                    "Staff creation completed successfully. StaffId: {StaffId}",
+                    staffId);
 
-                return CreatedAtAction(nameof(GetStaffById), new { id = staffId },
-                    new { StaffId = staffId, TempPassword = authResult.TempPassword });
+                return CreatedAtAction(
+                    nameof(GetStaffById),
+                    new { id = staffId },
+                    new { message = "Staff created successfully", staffId });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating staff member");
+                _logger.LogError(ex, "Error creating staff member for email: {Email}", request.Email);
                 return StatusCode(500, new { message = "Error creating staff member" });
             }
         }
@@ -87,31 +92,6 @@ namespace Backoffice_Services.Controllers
             }
         }
 
-        [HttpPut("{id}/permissions")]
-        public async Task<IActionResult> UpdateStaffPermissions(Guid id, [FromBody] UpdateStaffPermissionsRequest request)
-        {
-            try
-            {
-                var command = new UpdateStaffPermissionsCommand
-                {
-                    StaffId = id,
-                    Permissions = request.Permissions
-                };
-
-                var result = await _mediator.Send(command);
-                if (!result)
-                    return NotFound();
-
-                await _cacheService.RemoveAsync($"staff_{id}");
-                return Ok(new { message = "Staff permissions updated successfully" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating staff permissions");
-                return StatusCode(500, new { message = "Error updating staff permissions" });
-            }
-        }
-
         [HttpPut("{id}/role")]
         public async Task<IActionResult> UpdateStaffRole(Guid id, [FromBody] UpdateStaffRoleRequest request)
         {
@@ -120,7 +100,6 @@ namespace Backoffice_Services.Controllers
                 var command = new UpdateStaffRoleCommand
                 {
                     StaffId = id,
-                    NewRole = request.NewRole
                 };
 
                 var result = await _mediator.Send(command);

@@ -29,18 +29,9 @@ namespace Backoffice_Services.Infrastructure.Persistence.Configurations
                 .IsRequired()
                 .HasMaxLength(14);
 
-            builder.Property(s => s.Role)
-                .IsRequired()
-                .HasConversion<string>();
-
             builder.Property(s => s.IsActive)
                 .IsRequired()
                 .HasDefaultValue(true);
-
-            builder.HasMany(s => s.Permissions)
-                .WithOne(p => p.Staff)
-                .HasForeignKey(p => p.StaffId)
-                .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasIndex(s => s.UserId)
                 .IsUnique();

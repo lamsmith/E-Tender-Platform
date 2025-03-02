@@ -1,5 +1,7 @@
 using AuthService.Application.Common.Interface.Repositories;
 using AuthService.Application.Common.Interface.Services;
+using AuthService.Domain.Enums;
+using AuthService.Infrastructure.Authorization;
 using AuthService.Infrastructure.ExternalServices;
 using AuthService.Infrastructure.JWT;
 using AuthService.Infrastructure.Persistence.Context;
@@ -8,6 +10,7 @@ using AuthService.Infrastructure.Repositories;
 using AuthService.Infrastructure.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -91,6 +94,8 @@ builder.Services.AddAuthentication(x =>
 // Configure MassTransit
 builder.Services.AddMassTransit(x =>
 {
+    x.AddConsumer<CreateStaffUserConsumer>();
+
     x.UsingRabbitMq((context, cfg) =>
     {
         cfg.Host(builder.Configuration["RabbitMQ:HostName"] ?? "localhost", "/", h =>
@@ -111,6 +116,7 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
 // Register Services
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenGenerator>();
+builder.Services.AddHttpContextAccessor();
 
 // Register the HttpClient for UserService with certificate validation bypass
 builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>(client =>
@@ -128,9 +134,25 @@ builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>(client =>
 // Register Application Services
 builder.Services.AddScoped<IAuthService, AuthServiceImpl>();
 
+
+// Add Authorization policies (updated to use claims from JWT)
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireRfqManagement", policy =>
+        policy.RequireClaim("permission", PermissionType.RfqManagement.ToString()));
+    options.AddPolicy("RequireBidManagement", policy =>
+        policy.RequireClaim("permission", PermissionType.BidManagement.ToString()));
+    options.AddPolicy("RequireKycReview", policy =>
+        policy.RequireClaim("permission", PermissionType.KycReview.ToString()));
+});
+
+
+builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
+
+
 var app = builder.Build();
 
-// Ensure static files are served (Required for Swagger UI)
+
 app.UseStaticFiles();
 
 // Configure the HTTP request pipeline.
@@ -144,6 +166,9 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 }
 
 app.UseHttpsRedirection();
+
+builder.Services.AddHttpContextAccessor();
+
 
 // Add authentication middleware
 app.UseAuthentication();

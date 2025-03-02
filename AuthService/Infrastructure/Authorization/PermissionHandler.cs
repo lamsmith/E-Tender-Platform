@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
-using Backoffice_Services.Domain.Enums;
 
-namespace Backoffice_Services.Infrastructure.Authorization
+namespace AuthService.Infrastructure.Authorization
 {
     public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
     {
@@ -10,7 +9,7 @@ namespace Backoffice_Services.Infrastructure.Authorization
             PermissionRequirement requirement)
         {
             var userPermissions = context.User.Claims
-                .Where(c => c.Type == "permissions")
+                .Where(c => c.Type == "permission")
                 .Select(c => c.Value)
                 .ToList();
 

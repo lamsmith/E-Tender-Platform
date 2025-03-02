@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Backoffice_Services.Application.Common.Interfaces;
 using Backoffice_Services.Domain.Entities;
-using Backoffice_Services.Domain.Enums;
 using Backoffice_Services.Infrastructure.Persistence.Context;
 
 namespace Backoffice_Services.Infrastructure.Repositories
@@ -22,28 +21,28 @@ namespace Backoffice_Services.Infrastructure.Repositories
         public async Task<Staff> GetByIdAsync(Guid id)
         {
             return await _context.Staff
-                .Include(s => s.Permissions)
+                
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 
         public async Task<Staff> GetByUserIdAsync(Guid userId)
         {
             return await _context.Staff
-                .Include(s => s.Permissions)
+                
                 .FirstOrDefaultAsync(s => s.UserId == userId);
         }
 
         public async Task<Staff> GetByEmailAsync(string email)
         {
             return await _context.Staff
-                .Include(s => s.Permissions)
+                
                 .FirstOrDefaultAsync(s => s.Email.ToLower() == email.ToLower());
         }
 
         public async Task<List<Staff>> GetAllAsync()
         {
             return await _context.Staff
-                .Include(s => s.Permissions)
+              
                 .ToListAsync();
         }
 
@@ -70,39 +69,7 @@ namespace Backoffice_Services.Infrastructure.Repositories
             }
         }
 
-        public async Task<bool> HasPermissionAsync(Guid staffId, PermissionType permission)
-        {
-            return await _context.StaffPermissions
-                .AnyAsync(p => p.StaffId == staffId &&
-                              p.PermissionType == permission &&
-                              p.IsGranted);
-        }
-
-        public async Task<List<PermissionType>> GetPermissionsAsync(Guid staffId)
-        {
-            return await _context.StaffPermissions
-                .Where(p => p.StaffId == staffId && p.IsGranted)
-                .Select(p => p.PermissionType)
-                .ToListAsync();
-        }
-
-        public async Task UpdatePermissionsAsync(Guid staffId, List<PermissionType> permissions)
-        {
-            var existingPermissions = await _context.StaffPermissions
-                .Where(p => p.StaffId == staffId)
-                .ToListAsync();
-
-            _context.StaffPermissions.RemoveRange(existingPermissions);
-
-            var newPermissions = permissions.Select(p => new StaffPermission
-            {
-                StaffId = staffId,
-                PermissionType = p,
-                IsGranted = true
-            });
-
-            await _context.StaffPermissions.AddRangeAsync(newPermissions);
-            await _context.SaveChangesAsync();
-        }
+       
+       
     }
 }

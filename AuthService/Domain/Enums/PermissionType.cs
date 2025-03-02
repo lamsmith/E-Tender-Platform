@@ -1,4 +1,4 @@
-﻿namespace Backoffice_Services.Domain.Enums
+﻿namespace AuthService.Domain.Enums
 {
     public enum PermissionType
     {

@@ -1,5 +1,7 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.Configuration;
+using MassTransit;
+using SharedLibrary.Models.Messages;
 
 namespace Backoffice_Services.Infrastructure.ExternalServices
 {
@@ -7,18 +9,19 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<AuthServiceClient> _logger;
+        private readonly IRequestClient<CreateStaffUserMessage> _createStaffClient;
 
         public AuthServiceClient(
             HttpClient httpClient,
             IConfiguration configuration,
-            ILogger<AuthServiceClient> logger)
+            ILogger<AuthServiceClient> logger,
+            IRequestClient<CreateStaffUserMessage> createStaffClient)
         {
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(configuration["ExternalServices:AuthService:BaseUrl"]);
             _logger = logger;
+            _createStaffClient = createStaffClient;
         }
-
-
 
         public async Task<bool> UpdateUserVerificationStatusAsync(Guid userId, bool isApproved, string reason = null)
         {
@@ -40,44 +43,33 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
             }
         }
 
-        public async Task<(Guid UserId, string TempPassword)> CreateStaffUserAsync(string email, string role)
+        public async Task<(Guid UserId, string TempPassword)> CreateStaffUserAsync(
+            string email,
+            string firstName,
+            string lastName)
         {
             try
             {
-                var request = new { Email = email, Role = role };
-                var response = await _httpClient.PostAsJsonAsync("/api/auth/staff", request);
-
-                if (!response.IsSuccessStatusCode)
+                var message = new CreateStaffUserMessage
                 {
-                    _logger.LogError("Failed to create staff user. Status: {StatusCode}", response.StatusCode);
-                    throw new Exception("Failed to create staff user");
-                }
+                    Email = email,
+                    FirstName = firstName,
+                    LastName = lastName
+                };
 
-                var result = await response.Content.ReadFromJsonAsync<CreateStaffUserResponse>();
-                return (result.UserId, result.TempPassword);
+                var response = await _createStaffClient.GetResponse<CreateStaffUserResponse>(message);
+                var result = response.Message;
+
+                _logger.LogInformation(
+                    "Staff user created successfully in Auth Service. UserId: {UserId}, Email: {Email}",
+                    result.UserId,
+                    email);
+
+                return (response.Message.UserId, "");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating staff user with email: {Email}", email);
-                throw;
-            }
-        }
-
-        public async Task NotifyStaffUserAsync(Guid userId)
-        {
-            try
-            {
-                var response = await _httpClient.PostAsync($"/api/auth/staff/{userId}/notify", null);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError("Failed to notify staff user. Status: {StatusCode}", response.StatusCode);
-                    throw new Exception("Failed to notify staff user");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error notifying staff user: {UserId}", userId);
+                _logger.LogError(ex, "Error creating staff user in Auth Service. Email: {Email}", email);
                 throw;
             }
         }
@@ -108,8 +100,7 @@ namespace Backoffice_Services.Infrastructure.ExternalServices
             }
         }
 
-
-        private class CreateStaffUserResponse
+        private class CreateStaffResponse
         {
             public Guid UserId { get; set; }
             public string TempPassword { get; set; }

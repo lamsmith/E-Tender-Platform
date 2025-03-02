@@ -1,14 +1,15 @@
-using AuthService.Domain.Enums;
-using System.ComponentModel.DataAnnotations;
-
-namespace AuthService.Application.DTO.Requests
+namespace SharedLibrary.Models.Messages
 {
-    public class CreateStaffUserRequest
+    public class CreateStaffUserMessage
     {
-        [EmailAddress]
         public string Email { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public Guid InitiatorUserId { get; set; }
+    }
+
+    public class CreateStaffUserResponse
+    {
+        public Guid UserId { get; set; }
     }
 }

@@ -28,6 +28,14 @@ namespace AuthService.Infrastructure.Repositories
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
         }
 
+
+        public async Task<List<UserPermission>> GetUserPermissionsAsync(Guid userId)
+        {
+            return await _context.UserPermissions
+                .Where(up => up.UserId == userId && up.IsGranted)
+                .ToListAsync();
+        }
+
         public async Task<User> GetByIdAsync(Guid id)
         {
             return await _context.Users

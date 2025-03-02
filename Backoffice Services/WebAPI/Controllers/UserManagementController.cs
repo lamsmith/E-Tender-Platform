@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using Backoffice_Services.Application.Features.UserManagement.Commands;
 using Backoffice_Services.Application.Features.UserManagement.Queries;
-using Backoffice_Services.Domain.Enums;
 
 namespace Backoffice_Services.WebAPI.Controllers
 {

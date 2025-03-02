@@ -7,6 +7,7 @@ namespace AuthService.Application.Common.Interface.Repositories
         Task<User> CreateAsync(User user);
         Task<User> GetByEmailAsync(string email);
         Task<User> GetByIdAsync(Guid id);
+        Task<List<UserPermission>> GetUserPermissionsAsync(Guid userId);
         Task UpdateAsync(User user);
         Task<bool> EmailExistsAsync(string email);
         Task DeleteAsync(Guid id);

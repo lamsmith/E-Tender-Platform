@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
-using Backoffice_Services.Domain.Enums;
+using AuthService.Domain.Enums;
 
-namespace Backoffice_Services.Infrastructure.Authorization
+namespace AuthService.Infrastructure.Authorization
 {
     public class PermissionRequirement : IAuthorizationRequirement
     {
